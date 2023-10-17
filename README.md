@@ -1,4 +1,4 @@
-## <b>Deep Reinforcement learning</b>
+## <b>[Deep Reinforcement learning](phatcvo.github.io/Lec-DRL)</b>
 
 The goal of this document is to keep track the state-of-the-art in deep reinforcement learning. It starts with basics in reinforcement learning and deep learning to introduce the notations and covers different classes of deep RL methods, value-based or policy-based, model-free or model-based, etc.
 
@@ -13,5 +13,3 @@ One could extend the list and talk about hierarchical RL, inverse RL, imitation-
 
 
 Using the template [colorful ECCV paper](http://richzhang.github.io/colorization/). See how the webpage looks [here](https://richzhang.github.io/webpage-template).
-
-[phatcvo.github.io/Lec-DRL](phatcvo.github.io/Lec-DRL).
