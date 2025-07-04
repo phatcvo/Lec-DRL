@@ -1,0 +1,137 @@
+---
+title: Deep Reinforcement Learning
+echo: false
+---
+
+
+## Lectures
+
+#### 0 - Introduction
+
+
+```{python}
+from IPython.display import Markdown
+
+def table_lecture(lectures):
+    # header
+    text = """
+|          | Details |
+|----------|--------|"""
+
+    # fields
+    for key, desc in lectures.items():
+        text += f"""
+| {desc}  | [Slide](slides/{key}.html){{target="_blank"}}, [Book](posts/{key}.html){{target="_blank"}} |"""
+
+    # finish
+    text += """
+: {tbl-colwidths="[80, 11]"}
+"""
+
+    return Markdown(text)
+```
+
+```{python} 
+lecs = {
+    '0-Introduction': """**0 - Introduction**\\
+Introduction to the main concepts of reinforcement learning and showcasing of the current applications.""",
+}
+table_lecture(lecs)
+```
+
+
+#### 1 - Tabular RL
+
+```{python} 
+lecs = {
+    '1.1-Bandits': """**1.1 - Sampling and Bandits**\\
+n-armed bandits, the simplest RL setting that can be solved by sampling.""",
+    '1.2-MDP': """**1.2 - Markov Decision Processes and Dynamic Programming**\\
+MDPs are the basic RL framework. The value functions and the Bellman equations fully characterize a MDP. Dynamic programming is a model-based method allowing to iteratively solve the Bellman equations.""",
+    '1.3-MC': """**1.3 - Monte Carlo control**\\
+Monte Carlo control estimates value functions through sampling of complete episodes and infers the optimal policy using action selection, either on- or off-policy.""",
+    '1.4-TD': """**1.4 - Temporal Difference**\\
+TD algorithms allow the learning of value functions using single transitions. Q-learning is the famous off-policy variant.""",
+    '1.5-FunctionApproximation': """**1.5 - Function Approximation**\\
+Value functions can actually be approximated by any function approximator, allowing to apply RL to continuous state of action spaces.""",
+    '1.6-DeepNetworks': """**1.6 - Deep Neural Networks**\\
+Quick overview of the main neural network architectures needed for the rest of the course.""",
+}
+table_lecture(lecs)
+```
+
+
+#### 2 - Model-free RL
+
+
+```{python} 
+lecs = {
+    '2.1-DQN': """**2.1 - DQN: Deep Q-Network**\\
+DQN (Mnih et al. 2013) was the first successful application of deep networks to the RL problem. It has been applied to Atari video games and started the interest for deep RL methods.""",
+    '2.2-DQNvariants': """**2.2 - Beyond DQN**\\
+Various extensions to the DQN algorithms have been proposed in the following years: distributional learning, parameter noise, distributed learning or recurrent architectures.""",
+    '2.3-PG': """**2.3 - PG: Policy Gradient**\\
+Policy gradient methods allow to directly learn the policy without requiring action selection over value functions.""",
+    '2.4-ActorCritic': """**2.4 - AC: Actor-Critic**\\
+A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gradient from multiple parallel workers.""",
+    '2.5-DPG': """**2.5 - DPG: Deterministic Policy Gradient**\\
+DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics.""",
+    '2.6-PPO': """**2.6 - PPO: Proximal Policy Optimization**\\
+PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates.""",
+    '2.7-ACER': """**2.7 - ACER: Actor-Critic with Experience Replay**\\
+The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.""",
+    '2.8-EntropyRL': """**2.8 - SAC: Soft Actor-Critic**\\
+Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.""",
+}
+table_lecture(lecs)
+```
+
+
+
+
+#### 3 - Model-based RL
+
+
+```{python} 
+lecs = {
+    '3.1-ModelBased': """**3.1 - Model-based RL**\\
+Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. """,
+    '3.2-LearnedModels': """**3.2 - Planning with learned World models**\\
+Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.""",
+    '3.3-Planning': """**3.3 - Planning (MPC, TDM)**\\   
+Model-based learning is not only used to augment MF methods with imaginary rollouts.""",
+    '3.4-WorldModels': """**3.4 - World models, Dreamer**\\
+The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.""",
+    '3.5-AlphaGo': """**3.5 - AlphaGo**\\
+AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search).""",
+}
+table_lecture(lecs)
+```
+
+
+
+#### 4 - Outlook
+
+
+```{python} 
+lecs = {
+    '4.1-Outlook': """**5.1 - Outlook**\\
+Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc.""",
+}
+table_lecture(lecs)
+```
+
+
+## Recommended readings
+
+* Richard Sutton and Andrew Barto (2017). Reinforcement Learning: An Introduction. MIT press. 
+
+<http://incompleteideas.net/book/the-book-2nd.html>
+
+* CS294 course of Sergey Levine at Berkeley. 
+
+<http://rll.berkeley.edu/deeprlcourse/>
+
+* Reinforcement Learning course by David Silver at UCL.
+
+<http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html>

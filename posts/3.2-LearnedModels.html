@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>learnedmodels</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="3.2-LearnedModels_files/libs/clipboard/clipboard.min.js"></script>
+<script src="3.2-LearnedModels_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="3.2-LearnedModels_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="3.2-LearnedModels_files/libs/quarto-html/popper.min.js"></script>
+<script src="3.2-LearnedModels_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="3.2-LearnedModels_files/libs/quarto-html/anchor.min.js"></script>
+<link href="3.2-LearnedModels_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="3.2-LearnedModels_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="3.2-LearnedModels_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="3.2-LearnedModels_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="3.2-LearnedModels_files/libs/bootstrap/bootstrap-bb8a42f168430693d1c0fc26666c4cdf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="model-based-augmented-model-free-rl-dyna-q-i2a" class="level1">
+<h1>Model-based-augmented model-free RL (Dyna-Q, I2A)</h1>
+<section id="dyna-q" class="level2">
+<h2 class="anchored" data-anchor-id="dyna-q">Dyna-Q</h2>
+<p>Once a model of the environment is learned, it is possible to <strong>augment</strong> MF algorithms with MB transitions. The MF algorithm (e.g.&nbsp;Q-learning) learns from transitions <span class="math inline">\((s, a, r, s')\)</span> sampled either with:</p>
+<ol type="1">
+<li><strong>real experience</strong>: online interaction with the environment.</li>
+<li><strong>simulated experience</strong>: simulated transitions by the model.</li>
+</ol>
+<div id="fig-dynaq" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-dynaq-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/dynaq.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dynaq-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Dyna-Q alternates between online updates and simulated “offline” updates from the model.
+</figcaption>
+</figure>
+</div>
+<p>If the simulated transitions are realistic enough, the MF algorithm can converge using much less <strong>real transitions</strong>, thereby reducing its <strong>sample complexity</strong>.</p>
+<p>The <strong>Dyna-Q</strong> algorithm <span class="citation" data-cites="Sutton1990">[@Sutton1990]</span> is an extension of Q-learning to integrate a model <span class="math inline">\(M(s, a) = (s', r')\)</span>. It alternates between <strong>online</strong> updates of the agent using the real environment and (possible multiple) <strong>offline</strong> updates using the model.</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Dyna-Q <span class="citation" data-cites="Sutton1990">[@Sutton1990]</span>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Initialize values <span class="math inline">\(Q(s, a)\)</span> and model <span class="math inline">\(M(s, a)\)</span>.</p></li>
+<li><p><strong>for</strong> <span class="math inline">\(t \in [0, T_\text{total}]\)</span>:</p>
+<ul>
+<li><p>Select <span class="math inline">\(a_t\)</span> using <span class="math inline">\(Q\)</span>, take it on the <strong>real environment</strong> and observe <span class="math inline">\(s_{t+1}\)</span> and <span class="math inline">\(r_{t+1}\)</span>.</p></li>
+<li><p>Update the Q-value of the <strong>real</strong> action:</p></li>
+</ul>
+<p><span class="math display">\[\Delta Q(s_t, a_t) = \alpha \, (r_{t+1} + \gamma \, \max_a Q(s_{t+1}, a) - Q(s_t, a_t))\]</span></p>
+<ul>
+<li>Update the model:</li>
+</ul>
+<p><span class="math display">\[M(s_t, a_t) \leftarrow (s_{t+1}, r_{t+1})\]</span></p>
+<ul>
+<li><p><strong>for</strong> <span class="math inline">\(K\)</span> steps:</p>
+<ul>
+<li><p>Sample a state <span class="math inline">\(s_k\)</span> from a list of visited states.</p></li>
+<li><p>Select <span class="math inline">\(a_k\)</span> using <span class="math inline">\(Q\)</span>, predict <span class="math inline">\(s_{k+1}\)</span> and <span class="math inline">\(r_{k+1}\)</span> using the <strong>model</strong> <span class="math inline">\(M(s_k, a_k)\)</span>.</p></li>
+<li><p>Update the Q-value of the <strong>imagined</strong> action:</p></li>
+</ul>
+<p><span class="math display">\[\Delta Q(s_k, a_k) = \alpha \, (r_{k+1} + \gamma \, \max_a Q(s_{k+1}, a) - Q(s_k, a_k))\]</span></p></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<p>It is interesting to notice that Dyna-Q is the inspiration for DQN and its <strong>experience replay memory</strong>. In DQN, the ERM stores <strong>real transitions</strong> generated in the past and recovers them later intact, while in Dyna-Q, the model generates <strong>imagined transitions</strong> approximated based on past real transitions. Interleaving on-policy and off-policy updates is also the core idea of ACER (section <strong>?@sec-acer</strong>).</p>
+</section>
+<section id="sec-i2a" class="level2">
+<h2 class="anchored" data-anchor-id="sec-i2a">I2A - Imagination-augmented agents</h2>
+<p>I2A <span class="citation" data-cites="Weber2017">[@Weber2017]</span> is a <strong>model-based augmented model-free method</strong>: it trains a MF algorithm (A3C) with the help of <strong>rollouts</strong> generated by a MB model. The authors showcase their algorithm on the puzzle environment <strong>Sokoban</strong>, where you need to move boxes to specified locations.</p>
+<div id="fig-sokoban" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sokoban-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-sokoban.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sokoban-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Game of Sokoban used to showcase the abilities of I2A. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>Sokoban is a quite hard game, as actions are irreversible (you can get stuck) and the solution requires many actions (sparse rewards). MF methods are bad at this game as they learn through trials-and-(many)-errors.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/fg8QImlvB-k" title="Sokoban" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>I2A is composed of several different modules. We will now have a look at them one by one.</p>
+<section id="environment-model" class="level3">
+<h3 class="anchored" data-anchor-id="environment-model">Environment model</h3>
+<div id="fig-i2aenvmodel" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2aenvmodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-envmodel.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2aenvmodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Environment model of I2A. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>The <strong>environment model</strong> learns to predict the next frame and the next reward based on the four last frames and the chosen action:</p>
+<p><span class="math display">\[
+    (o_{t-3}, o_{t-2}, o_{t-1}, o_{t}, a_t) \rightarrow (o_{t+1}, r_{t+1})
+\]</span></p>
+<p>As Sokoban is a POMDP (partially observable), the notation uses <strong>observations</strong> <span class="math inline">\(o_t\)</span> instead of states <span class="math inline">\(s_t\)</span>, but it does not really matter here.</p>
+<p>The neural network is a sort of <strong>convolutional autoencoder</strong>, taking additionally an action <span class="math inline">\(a\)</span> as input and predicting the next reward. Formally, the output “image” being different from the input, the neural network is not an autoencoder but belongs to the family of segmentation networks such as SegNet <span class="citation" data-cites="Badrinarayanan2016">[@Badrinarayanan2016]</span> or U-net <span class="citation" data-cites="Ronneberger2015">[@Ronneberger2015]</span>. It can be pretrained using a random policy, and later fine-tuned during training.</p>
+</section>
+<section id="imagination-core" class="level3">
+<h3 class="anchored" data-anchor-id="imagination-core">Imagination core</h3>
+<div id="fig-i2aimgainationcore" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2aimgainationcore-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-architecture1.png" class="img-fluid figure-img" style="width:40.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2aimgainationcore-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Imagination core. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>The <strong>imagination core</strong> is composed of the environment model <span class="math inline">\(M(s, a)\)</span> and a <strong>rollout policy</strong> <span class="math inline">\(\hat{\pi}\)</span>. The rollout policy <span class="math inline">\(\hat{\pi}\)</span> is a simple and fast policy. It does not have to be the trained policy <span class="math inline">\(\pi\)</span>: It could even be a random policy, or a pretrained policy using for example A3C directly. In I2A, the rollout policy <span class="math inline">\(\hat{\pi}\)</span> is obtained through <strong>policy distillation</strong> of the bigger policy network <span class="math inline">\(\pi\)</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Policy distillation <span class="citation" data-cites="Rusu2016">[@Rusu2016]</span>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The small rollout policy network <span class="math inline">\(\hat{\pi}\)</span> tries to copy the outputs <span class="math inline">\(\pi(s, a)\)</span> of the whole model. This is a supervised learning task: we just need minimize the KL divergence between the two policies:</p>
+<p><span class="math display">\[\mathcal{L}(\hat{\theta}) = \mathbb{E}_{s, a} [D_\text{KL}(\hat{\pi}(s, a) || \pi(s, a))]\]</span></p>
+<p>As the network is smaller, it won’t be quite as good as <span class="math inline">\(\pi\)</span> (although not dramatically), but its learning objective is simpler: supervised learning is much easier than RL, especially when the rewards are sparse. A very small network (up to 90% of the original parameters) is often enough for the same functionality.</p>
+<div id="fig-policydistillation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-policydistillation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/policydistillation.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-policydistillation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Policy distillation. The student model learns to imitate the teacher model through supervised learning, which is much easier than RL.
+</figcaption>
+</figure>
+</div>
+<p>In general, policy distillation can be used to ensure generalization over different environments, as in Distral <span class="citation" data-cites="Teh2017">[@Teh2017]</span>. Each learning algorithms learns its own task, but tries not to diverge too much from a <strong>shared policy</strong>, which turns out to be good at all tasks.</p>
+<div id="fig-distral" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-distral-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/distral.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-distral-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Distral architecture. Each sub-policy <span class="math inline">\(\pi_i\)</span> learns a specific environment. The central policy <span class="math inline">\(\pi_0\)</span> distills knowledge from the sub-policies, while forcing them through regularization not to diverge too much. Ultimately, the central policy becomes able to solve all the environments. Source: <span class="citation" data-cites="Teh2017">@Teh2017</span>
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="imagination-rollout-module" class="level3">
+<h3 class="anchored" data-anchor-id="imagination-rollout-module">Imagination rollout module</h3>
+<div id="fig-i2a-rollout" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2a-rollout-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-architecture2.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2a-rollout-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Imagination rollout module. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>The <strong>imagination rollout module</strong> uses the imagination core to predict iteratively the next <span class="math inline">\(\tau\)</span> frames and rewards using the current frame <span class="math inline">\(o_t\)</span> and the rollout policy:</p>
+<p><span class="math display">\[(o_{t-3}, o_{t-2}, o_{t-1}, o_{t}) \rightarrow \hat{o}_{t+1} \rightarrow \hat{o}_{t+2} \rightarrow \ldots \rightarrow \hat{o}_{t+\tau}\]</span></p>
+<p>The <span class="math inline">\(\tau\)</span> frames and rewards are passed <strong>backwards</strong> to a convolutional LSTM (from <span class="math inline">\(t+\tau\)</span> to <span class="math inline">\(t\)</span>) which produces an embedding / encoding of the rollout. The output of the imagination rollout module is a vector <span class="math inline">\(e_i\)</span> (the final state of the LSTM) representing the whole rollout, including the (virtually) obtained rewards. Note that because of the stochasticity of the rollout policy <span class="math inline">\(\hat{\pi}\)</span>, different rollouts can lead to different encoding vectors.</p>
+</section>
+<section id="model-free-path" class="level3">
+<h3 class="anchored" data-anchor-id="model-free-path">Model-free path</h3>
+<div id="fig-i2a-mf" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2a-mf-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-architecture3.png" class="img-fluid figure-img" style="width:70.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2a-mf-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Model-free path Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>For the current observation <span class="math inline">\(o_t\)</span> (and the three frames before), we then generate one <strong>rollout</strong> per possible action (5 in Sokoban):</p>
+<ul>
+<li>What would happen if I do action 1?</li>
+<li>What would happen if I do action 2?</li>
+<li>etc.</li>
+</ul>
+<p>The resulting vectors are concatenated to the output of <strong>model-free</strong> path (a convolutional neural network taking the current observation as input).</p>
+</section>
+<section id="full-model" class="level3">
+<h3 class="anchored" data-anchor-id="full-model">Full model</h3>
+<p>Altogether, we have a huge NN with weights <span class="math inline">\(\theta\)</span> (model, rollout encoder, MF path) between the input observation <span class="math inline">\(o_t\)</span> and the output policy <span class="math inline">\(\pi\)</span> (plus the critic <span class="math inline">\(V\)</span>).</p>
+<div id="fig-i2amodel" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2amodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-architecture.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2amodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: Complete architecture of I2A. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>We can then learn the policy <span class="math inline">\(\pi\)</span> and value function <span class="math inline">\(V\)</span> using the n-step advantage actor-critic (A3C) :</p>
+<p><span class="math display">\[\nabla_\theta \mathcal{J}(\theta) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta (s_t, a_t) \, (\sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n}) - V_\varphi(s_t)) ]\]</span></p>
+<p><span class="math display">\[\mathcal{L}(\varphi) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[(\sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n}) - V_\varphi(s_t))^2]\]</span></p>
+<p>The complete architecture may seem complex, but everything is differentiable so we can apply backpropagation and train the network <strong>end-to-end</strong> using multiple workers. It is simply the A3C algorithm (MF), but <strong>augmented</strong> by MB rollouts, i.e.&nbsp;with explicit information about the (emulated) future.</p>
+</section>
+<section id="results" class="level3">
+<h3 class="anchored" data-anchor-id="results">Results</h3>
+<p>Unsurprisingly, I2A performs better than A3C on Sokoban. The deeper the rollout, the better:</p>
+<div id="fig-i2a-results1" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2a-results1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-results.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2a-results1-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10: Performance of I2A. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<p>The model does not even have to be perfect: the MF path can compensate for imperfections:</p>
+<div id="fig-i2a-results2" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-i2a-results2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/i2a-results2.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-i2a-results2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11: Influence of noise. Source: <span class="citation" data-cites="Weber2017">@Weber2017</span>
+</figcaption>
+</figure>
+</div>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/llwAwE7ItdM" title="I2A" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
