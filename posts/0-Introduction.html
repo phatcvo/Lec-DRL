@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>introduction</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="0-Introduction_files/libs/clipboard/clipboard.min.js"></script>
+<script src="0-Introduction_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="0-Introduction_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="0-Introduction_files/libs/quarto-html/popper.min.js"></script>
+<script src="0-Introduction_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="0-Introduction_files/libs/quarto-html/anchor.min.js"></script>
+<link href="0-Introduction_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="0-Introduction_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="0-Introduction_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="0-Introduction_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="0-Introduction_files/libs/bootstrap/bootstrap-bb8a42f168430693d1c0fc26666c4cdf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="introduction" class="level1 unnumbered">
+<h1 class="unnumbered">Introduction</h1>
+<p>Deep reinforcement learning (Deep RL) is the integration of deep learning methods, classically used in supervised or unsupervised learning contexts, to reinforcement learning (RL), a well-studied adaptive control framework used in problems with delayed and partial feedback.</p>
+<section id="what-is-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-reinforcement-learning">What is Reinforcement Learning?</h2>
+<div id="fig-sulrl" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sulrl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/slulrl.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sulrl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Three types of machine learning: Supervised learning uses a ground truth to compute a prediction error that drives learning. Unsupervised learning extracts statistical properties from raw data. Reinforcement learning uses a reward signal from the environment to assess the correctness of an action.
+</figcaption>
+</figure>
+</div>
+<p><strong>Supervised learning</strong> (SL) trains a discriminative model (classification or regression) by comparing the correct answer (ground truth) available in a training set to compute a prediction error. For neural networks, the prediction error (typically the difference between the ground truth and the predicted output) is used by the backpropagation algorithm to adapt the parameters of the model so that the prediction error is iteratively reduced. Typical examples are convolutional neural networks (CNN) predicting the label associated to an image, a recurrent neural network (RNN) predicting autoregressively the future of a time series, or a fully-connected network performing credit scoring. The major drawback of SL methods is that they typically require a lot of annotated data, which are very expensive to produce.</p>
+<p><strong>Unsupervised learning</strong> (UL) only deals with raw data, trying to extract statistical properties without any additional information. One application of UL is dimensionality reduction, which searches how to project highly dimensional data (e.g.&nbsp;images) onto smaller spaces without losing too much information. Algorithms like PCA (Principal Components Analysis) or neural architectures like autoencoders are typically used. Another approach to UL is <strong>generative modelling</strong>, i.e.&nbsp;learning a model of the distribution of the data allowing to generate new samples. Generative AI (ChatGPT, Midjourney, etc) relies on learning the distribution of vast amounts of text or images in order to generate novel high-quality samples. Self-supervised learning relies on using supervised learning algorithms on raw data by using self-generated pretext tasks, such as masking part of the data in the input and learning to predict it, or guessing the next item in a sequence.</p>
+<p><strong>Reinforcement learning</strong> (RL) lies somehow in between: the model makes a prediction (an action), but there is no ground truth to compare with. The only feedback it gets from the environment is a unidimensional <strong>reward signal</strong> that informs how good (or bad) the action was. In the extreme case, this partial feedback can be binary, like winning or losing a game after a sequence of dozens of actions.</p>
+<p>RL setups follow the <strong>agent-environment</strong> interface <span class="citation" data-cites="Sutton1998">[@Sutton1998]</span>. The agent (for example a robot) is in a given state <span class="math inline">\(s_t\)</span> at time <span class="math inline">\(t\)</span>. This state represents the perception of the robot (camera, internal sensors) but also its position inside the environment, and generally anything relevant information for the task. The agent selects an action <span class="math inline">\(a_t\)</span> according to its policy (or strategy). This action modifies the environment (or world), what brings the agent in a new state <span class="math inline">\(s_{t+1}\)</span>. Furthermore, a reward <span class="math inline">\(r_{t+1}\)</span> is delivered to the agent to valuate the executed action. This interaction loop continues over time, leading to episodes or trajectories of various lengths until a terminal state is reached. The goal of the agent is to find a policy that maximizes the sum of the rewards received over time (more on that later).</p>
+<div id="fig-agentenv" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-agentenv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/agent-environment-robot.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-agentenv-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Agent-environment interface. Images generated by ChatGPT.
+</figcaption>
+</figure>
+</div>
+<p>The key concept in RL is <strong>trial and error</strong> learning: trying out actions until their outcome is good. The agent selects an <strong>action</strong> from its repertoire and observes the outcome. If the outcome is positive (reward), the action is reinforced (it becomes more likely to occur again). If the outcome is negative (punishment), the action will be avoided in the future. After enough interactions, the agent has <strong>learned</strong> which action to perform in a given situation.</p>
+<div id="fig-trialerror" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-trialerror-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/trialanderror.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-trialerror-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Trial and error learning. Top: classical trial and error learning, where the agent tries different actions until the outcome is satisfying. Bottom: the outcome of the trial influences via learning whether the corresponding action will be reinforced or avoided in the future.
+</figcaption>
+</figure>
+</div>
+<p>The agent has to <strong>explore</strong> its environment via trial-and-error in order to gain knowledge. The agent’s behavior then is roughly divided into two phases:</p>
+<ol type="1">
+<li>The <strong>exploration</strong> phase, where it gathers knowledge about its environment.</li>
+<li>The <strong>exploitation</strong> phase, where this knowledge is used to collect as many rewards as possible.</li>
+</ol>
+<p>The biggest issue with this approach is that exploring large action spaces might necessitate a <strong>lot</strong> of trials (a problem referred to as <strong>sample complexity</strong>). The modern techniques we will see in this book try to reduce the sample complexity.</p>
+<div id="fig-cockpit" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cockpit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/cockpit.webp" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cockpit-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Sample complexity: learning to control a modern plane through trial and error might be too long and dangerous. Image generated by ChatGPT.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip no-icon callout-titled" title="Sutton and Barto. Reinforcement learning: An Introduction">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Sutton and Barto. Reinforcement learning: An Introduction
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The book “Reinforcement learning: An introduction” (1st and 2nd editions) <span class="citation" data-cites="Sutton1998 Sutton2017">[@Sutton1998;@Sutton2017]</span> contains everything you need to know about the basics of RL. The second edition can be found here:</p>
+<p><a href="http://incompleteideas.net/book/the-book-2nd.html" class="uri">http://incompleteideas.net/book/the-book-2nd.html</a></p>
+</div>
+</div>
+</section>
+<section id="applications-of-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="applications-of-reinforcement-learning">Applications of Reinforcement Learning</h2>
+<p>RL can be used in many control problems, ranging from simple problems to complex robotics, video games or even plasma control.</p>
+<section id="optimal-control" class="level3">
+<h3 class="anchored" data-anchor-id="optimal-control">Optimal control</h3>
+<p>The most basic problems on which RL can be applied are simple control environments with a few degrees of freedom. The <code>gymnasium</code> library (formerly <code>gym</code>) maintained by the Farama foundation provides an API for RL environments as well as the reference implementation of the most popular ones, including control problems, Mujoco robotic simulations and Atari games:</p>
+<p><a href="https://gymnasium.farama.org" class="uri">https://gymnasium.farama.org</a></p>
+<p>Some examples:</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Pendulum
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Goal: maintaining the pendulum vertical by changing the applied torque.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Before</strong></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="img/pendulum-before.gif" class="img-fluid figure-img" style="width:60.0%"></p>
+<figcaption>Source: <a href="https://keras.io/examples/rl/ddpg_pendulum/" class="uri">https://keras.io/examples/rl/ddpg_pendulum/</a></figcaption>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<p><strong>After</strong></p>
+<p><img src="img/pendulum-after.gif" class="img-fluid" style="width:60.0%"></p>
+</div>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Cartpole
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Goal: maintaining the pole vertical by moving the cart.</p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<p><strong>Before</strong></p>
+<p><img src="img/cartpole-before.gif" class="img-fluid" style="width:60.0%"></p>
+</div><div class="column" style="width:50%;">
+<p><strong>After</strong></p>
+<p><img src="img/cartpole-after.gif" class="img-fluid" style="width:60.0%"></p>
+</div>
+</div>
+<p>Source: <a href="https://towardsdatascience.com/cartpole-introduction-to-reinforcement-learning-ed0eb5b58288" class="uri">https://towardsdatascience.com/cartpole-introduction-to-reinforcement-learning-ed0eb5b58288</a></p>
+<p>See the Cartpole learning in real life (Deisenroth and Rasmussen, 2011):</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/XiigTGKZfks" title="Cartpole" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</div>
+</div>
+</section>
+<section id="atari-games" class="level3">
+<h3 class="anchored" data-anchor-id="atari-games">Atari games</h3>
+<p>These toy control problems were used for decades to test various RL algorithms, although serious applications existed. The big breakthrough in (deep) reinforcement learning occurred in 2013, as a small startup in London, DeepMind Technologies Limited (now Google Deepmind), led by Demis Hassabis, successfully coupled reinforcement learning with deep neural networks for the first time. Their proposed algorithm, the deep Q-network <span class="citation" data-cites="Mnih2013 Mnih2015">[DQN, @Mnih2013;@Mnih2015]</span>, used a convolutional neural network (CNN) to learn to play many Atari games by trial and error, without any prior information about the game and only using raw images as inputs.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/rQIShnTz1kU" title="DQN - Atari" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>Similar pixel-based games were quickly mastered, such as the TORCS simulator with the A3C algporithm <span class="citation" data-cites="Mnih2016">[@Mnih2016]</span>:</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/0xo1Ldx3L5Q" title="A3C - TOCS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>Simulated robotics were addressed by similar techniques:</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/faDKMMwOS2Q" title="A3C - Parkour" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="alphago" class="level3">
+<h3 class="anchored" data-anchor-id="alphago">AlphaGo</h3>
+<p>The next major breakthrough for Deep RL happened in 2016, as AlphaGo, also created by Deepmind, was able to beat Lee Sedol, world champion of the game of Go. AlphaGo coupled the power of deep neural networks and RL with Monte Carlo Tree Search (MCTS), a popular tree-based search algorithm, to learn through self-play the optimal strategy for the game of Go. This performance was extremely commented, as such a dominance of an AI system was not expected before decades.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/8tq1C8spV_g" title="AlphaGo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="openai-five-and-alphastar" class="level3">
+<h3 class="anchored" data-anchor-id="openai-five-and-alphastar">OpenAI Five and AlphaStar</h3>
+<p>Despite its complexity, the game of Go is actually quite simple for a computer: there is full observability (the entire state of the game is known to the players), the number of possible actions is quite limited, the consequence of an action is fully predictable, and planning is only necessary over a few dozens of plays. On the contrary, modern video games like DotA 2 or Starcraft have partial observability (the player only sees its immediate surroundings), hundreds of hierarchical actions can be made at each time step, the dynamics of the game are largely unknown, and a game can last hours. In some sense, it is much more difficult to become good at DotA than it is at chess or Go.</p>
+<p>Deepmind and OpenAI recognized this difference and started applying deep RL methods to Starcraft II and DotA 2, respectively, between 2017 and 2020. They managed to beat teams of professional players under limited conditions, but eventually stopped because of the huge training costs (and they had to work on LLMs…).</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/eHipy_j29Xw" title="OpenAI Five" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/UuhECwm31dM" title="OpenAI Five" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="process-control" class="level3">
+<h3 class="anchored" data-anchor-id="process-control">Process control</h3>
+<p>In 2016, Deepmind applied its RL algorithms to the control of the cooling systems in Google’s datacenters. The system learned passively from observations of the current cooling sytem what the optimal policy was. When they gave control to the RL agent, it instantly led to a 40% reduction of energy consumption, which, for Google’s data centers, represents a huge amount of money. See <span class="citation" data-cites="Luo2022">@Luo2022</span> for a recent review of RL controlling cooling systems.</p>
+<div id="fig-googledatacenter" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-googledatacenter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/googledatacenter_1.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-googledatacenter-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Source: <a href="https://deepmind.com/blog/deepmind-ai-reduces-google-data-centre-cooling-bill-40/" class="uri">https://deepmind.com/blog/deepmind-ai-reduces-google-data-centre-cooling-bill-40/</a>
+</figcaption>
+</figure>
+</div>
+<p>This showed that the progress in deep RL was not limited to toy problems or video games, but could be relevant for complex process control problems. An amazing illustration of that idea is the magnetic control of tokamak plasmas by <span class="citation" data-cites="Degrave2022">@Degrave2022</span>.</p>
+<div id="fig-tokamak" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tokamak-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/tokamak.webp" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tokamak-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: Magnetic control of tokamak plasmas through deep reinforcement learning. Source: <span class="citation" data-cites="Degrave2022">@Degrave2022</span>
+</figcaption>
+</figure>
+</div>
+<p>Another recent illustration is how RL can be used in the design of silicon chips by Nvidia <span class="citation" data-cites="Roy2022">[@Roy2022]</span>.</p>
+<div id="fig-chipdesign" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-chipdesign-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/chipdesign.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-chipdesign-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: Optimization of Parallel Prefix Circuits using Deep Reinforcement Learning. <span class="citation" data-cites="Roy2022">@Roy2022</span>
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="robotics" class="level3">
+<h3 class="anchored" data-anchor-id="robotics">Robotics</h3>
+<p>A natural application of RL is in the domain of (autonomous) robotics, where agents / robots can autonomously solve tasks by themselves. A very influential lab working on robotics and Deep RL is RAIL lab of <strong>Sergey Levine</strong> at Berkeley.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/l8zKZLqkfII" title="OpenAI Five" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>OpenAI worked on dexterity tasks.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/jwSbzNHGflM" title="OpenAI Dexterity" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>Autonomous driving is another promising field of application for deep RL. The english startup Wayve made for example a very exciting demo of their system (see <span class="citation" data-cites="Kendall2018">@Kendall2018</span> and <a href="https://wayve.ai/blog/learning-to-drive-in-a-day-with-reinforcement-learning" class="uri">https://wayve.ai/blog/learning-to-drive-in-a-day-with-reinforcement-learning</a>).</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/eRwTbRtnT1I" title="Wayve" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+<p>A recent contribution by the UZH Robotics and Perception Group leveraged deep RL to control drones flying at high speeds <span class="citation" data-cites="Kaufmann2023">[@Kaufmann2023]</span>.</p>
+<div class="quarto-video ratio ratio-16x9"><iframe data-external="1" src="https://www.youtube.com/embed/fBiataDpGIo" title="Drone racing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div>
+</section>
+<section id="chatgpt" class="level3">
+<h3 class="anchored" data-anchor-id="chatgpt">ChatGPT</h3>
+<p>RL can also be used to fine-tune <strong>generative AI</strong> models, such as diffusion models or large language models such as ChatGPT. Generative models typically learn from raw data using pretext tasks: predicting missing parts of the data, or predicting the next item in a sequence. While this allows to learn a world model, it does not lead to meaningful behaviors for a task at hand. Using RL allows to fine-tune the model so that its outputs align with the task. Such a model alignment is central to the acceptance of LLMs.</p>
+<div id="fig-chatgpt" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-chatgpt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/ChatGPT.svg" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-chatgpt-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: Source: <a href="https://openai.com/blog/chatgpt/" class="uri">https://openai.com/blog/chatgpt/</a>
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="and-many-more" class="level3">
+<h3 class="anchored" data-anchor-id="and-many-more">and many more…</h3>
+<p>RL finds applications in virtually any field involving sequential decision making, including finance technology <span class="citation" data-cites="Malibari2023">[@Malibari2023]</span>, inventory management <span class="citation" data-cites="Madeka2022">[@Madeka2022]</span>, missile guidance <span class="citation" data-cites="Li2022a">[@Li2022a]</span> or healthcare <span class="citation" data-cites="Yu2020b">[@Yu2020b]</span>.</p>
+</section>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

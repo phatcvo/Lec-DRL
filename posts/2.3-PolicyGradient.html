@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>policygradient</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="2.3-PolicyGradient_files/libs/clipboard/clipboard.min.js"></script>
+<script src="2.3-PolicyGradient_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="2.3-PolicyGradient_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="2.3-PolicyGradient_files/libs/quarto-html/popper.min.js"></script>
+<script src="2.3-PolicyGradient_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="2.3-PolicyGradient_files/libs/quarto-html/anchor.min.js"></script>
+<link href="2.3-PolicyGradient_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="2.3-PolicyGradient_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="2.3-PolicyGradient_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="2.3-PolicyGradient_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="2.3-PolicyGradient_files/libs/bootstrap/bootstrap-bb8a42f168430693d1c0fc26666c4cdf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="sec-policygradient" class="level1">
+<h1>Policy Gradient methods</h1>
+<p>Approximating directly the Q-values in value-based methods (DQN) suffers from many problems when using deep neural networks:</p>
+<ul>
+<li>The Q-values are <strong>unbounded</strong>: they can take any value (positive or negative), so the output layer must be linear.</li>
+<li>The Q-values have a <strong>high variability</strong>: some <span class="math inline">\((s,a)\)</span> pairs have very negative values, others have very positive values. Difficult to learn for a NN.</li>
+<li>It works only for small <strong>discrete action spaces</strong>: we need to iterate over all actions to find the greedy action.</li>
+</ul>
+<p>Instead of learning the Q-values, one could approximate directly the policy <span class="math inline">\(\pi_\theta(s, a)\)</span> with the neural network. <span class="math inline">\(\pi_\theta(s, a)\)</span> is then called a <strong>parameterized policy</strong>, as it depends directly on the parameters <span class="math inline">\(\theta\)</span> of the NN. For discrete action spaces, the output of the NN can be a <strong>softmax</strong> layer, directly giving the probability of selecting an action. For continuous action spaces, the output layer can directly control the effector (e.g.&nbsp;the joint angles of a robotic arm). Parameterized policies can represent continuous policies and avoid the curse of dimensionality. See Section <strong>?@sec-continuousspaces</strong> for more details.</p>
+<div id="fig-policysearchmodel" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-policysearchmodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/policysearch.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-policysearchmodel-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: In policy search, the function approximator outputs direcly the policy <span class="math inline">\(\pi_\theta(s, a)\)</span>, not the Q-values.
+</figcaption>
+</figure>
+</div>
+<section id="policy-search" class="level2">
+<h2 class="anchored" data-anchor-id="policy-search">Policy search</h2>
+<p><strong>Policy search</strong> methods directly learn to estimate the policy <span class="math inline">\(\pi_\theta\)</span> with a parameterized function estimator. The goal of the neural network is to maximize an objective function representing the <strong>return</strong> (sum of rewards, noted <span class="math inline">\(R(\tau)\)</span> for simplicity) of the trajectories <span class="math inline">\(\tau = (s_0, a_0, s_1, a_1, \ldots, s_T, a_T)\)</span> selected by the policy <span class="math inline">\(\pi_\theta\)</span>:</p>
+<p><span class="math display">\[
+    J(\theta) = \mathbb{E}_{\tau \sim \rho_\theta}[R(\tau)] = \mathbb{E}_{\tau \sim \rho_\theta}[\sum_{t=0}^T \gamma^t \, r(s_t, a_t, s_{t+1}) ]
+\]</span></p>
+<div id="fig-policysearch" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-policysearch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/policysearch.svg" class="img-fluid figure-img" style="width:60.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-policysearch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: We search for a policy that only generates trajectories associated wizh a high return.
+</figcaption>
+</figure>
+</div>
+<p>To maximize this objective function, the policy <span class="math inline">\(\pi_\theta\)</span> should only generate trajectories <span class="math inline">\(\tau\)</span> associated with high returns <span class="math inline">\(R(\tau)\)</span> and avoid those with low return, which is exactly what we want.</p>
+<p>The objective function uses the mathematical expectation of the return over all possible trajectories. The likelihood that a trajectory is generated by the policy <span class="math inline">\(\pi_\theta\)</span> is noted <span class="math inline">\(\rho_\theta(\tau)\)</span> and given by:</p>
+<p><span class="math display">\[
+    \rho_\theta(\tau) = p_\theta(s_0, a_0, \ldots, s_T, a_T) = p_0 (s_0) \, \prod_{t=0}^T \pi_\theta(s_t, a_t) p(s_{t+1} | s_t, a_t)
+\]</span></p>
+<p><span class="math inline">\(p_0 (s_0)\)</span> is the initial probability of starting in <span class="math inline">\(s_0\)</span> (independent from the policy) and <span class="math inline">\(p(s_{t+1} | s_t, a_t)\)</span> is the transition probability defining the MDP. Having the probability distribution of the trajectories, we can expand the mathematical expectation in the objective function:</p>
+<p><span class="math display">\[
+    J(\theta) = \int_\tau \rho_\theta (\tau) \, R(\tau) \, d\tau
+\]</span></p>
+<p>Monte Carlo sampling could be used to estimate the objective function. One basically would have to sample multiple trajectories <span class="math inline">\(\{\tau_i\}\)</span> and average the obtained returns:</p>
+<p><span class="math display">\[
+    J(\theta) \approx \frac{1}{N} \, \sum_{i=1}^N  R(\tau_i)
+\]</span></p>
+<p>However, this approach would suffer from several problems:</p>
+<ol type="1">
+<li>The trajectory space is extremely huge, so one would need a lot of sampled trajectories to have a correct estimate of the objective function (<strong>high variance</strong>).</li>
+<li>For stability reasons, only small changes can be made to the policy at each iteration, so it would necessitate a lot of episodes (<strong>sample complexity</strong>).</li>
+<li>For continuing tasks (<span class="math inline">\(T = \infty\)</span>), the return can not be estimated as the episode never ends.</li>
+</ol>
+<p>The policy search methods presented in this section are called <strong>policy gradient methods</strong>. As we are going to apply gradient ascent on the weights <span class="math inline">\(\theta\)</span> in order to maximize <span class="math inline">\(J(\theta)\)</span>, all we actually need is the gradient <span class="math inline">\(\nabla_\theta J(\theta)\)</span> of the objective function w.r.t the weights:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) = \frac{\partial J(\theta)}{\partial \theta}
+\]</span></p>
+<p>Once a suitable estimation of this <strong>policy gradient</strong> is obtained, gradient ascent is straightforward:</p>
+<p><span class="math display">\[
+    \theta \leftarrow \theta + \eta \, \nabla_\theta J(\theta)
+\]</span></p>
+<p>The rest of this section basically presents methods allowing to estimate the policy gradient (REINFORCE, DPG) and to improve the sample complexity. See:</p>
+<ul>
+<li><a href="http://www.scholarpedia.org/article/Policy_gradient_methods" class="uri">http://www.scholarpedia.org/article/Policy_gradient_methods</a> for an more detailed overview of policy gradient methods,</li>
+<li><a href="https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html" class="uri">https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html</a> and</li>
+<li><a href="http://karpathy.github.io/2016/05/31/rl/" class="uri">http://karpathy.github.io/2016/05/31/rl/</a> for excellent tutorials from Lilian Weng and Andrej Karpathy.</li>
+</ul>
+<p>The article by <span class="citation" data-cites="Peters2008">@Peters2008</span> is also a good overview of policy gradient methods.</p>
+</section>
+<section id="reinforce" class="level2">
+<h2 class="anchored" data-anchor-id="reinforce">REINFORCE</h2>
+<section id="estimating-the-policy-gradient" class="level3">
+<h3 class="anchored" data-anchor-id="estimating-the-policy-gradient">Estimating the policy gradient</h3>
+<p><span class="citation" data-cites="Williams1992">@Williams1992</span> proposed a useful estimate of the policy gradient. Considering that the return <span class="math inline">\(R(\tau)\)</span> of a trajectory does not depend on the parameters <span class="math inline">\(\theta\)</span>, one can simplify the policy gradient in the following way:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) = \nabla_\theta \int_\tau \rho_\theta (\tau) \, R(\tau) \, d\tau =  \int_\tau (\nabla_\theta \rho_\theta (\tau)) \, R(\tau) \, d\tau
+\]</span></p>
+<p>We now use the <strong>log-trick</strong>, a simple identity based on the fact that:</p>
+<p><span class="math display">\[
+    \frac{d \log f(x)}{dx} = \frac{f'(x)}{f(x)}
+\]</span></p>
+<p>to rewrite the policy gradient of a single trajectory:</p>
+<p><span class="math display">\[
+    \nabla_\theta \rho_\theta (\tau) = \rho_\theta (\tau) \, \nabla_\theta \log \rho_\theta (\tau)
+\]</span></p>
+<p>The policy gradient becomes:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \int_\tau \rho_\theta (\tau) \, \nabla_\theta \log \rho_\theta (\tau) \, R(\tau) \, d\tau
+\]</span></p>
+<p>which now has the form of a mathematical expectation:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{\tau \sim \rho_\theta}[ \nabla_\theta \log \rho_\theta (\tau) \, R(\tau) ]
+\]</span></p>
+<p>This means that we can obtain an estimate of the policy gradient by simply sampling different trajectories <span class="math inline">\(\{\tau_i\}\)</span> and averaging <span class="math inline">\(\nabla_\theta \log \rho_\theta (\tau_i) \, R(\tau_i)\)</span> (Monte Carlo sampling).</p>
+<p>Let’s now look further at how the gradient of the log-likelihood of a trajectory <span class="math inline">\(\log \pi_\theta (\tau)\)</span> look like. Through its definition, the log-likelihood of a trajectory is:</p>
+<p><span class="math display">\[
+    \log \rho_\theta(\tau) = \log p_0 (s_0) + \sum_{t=0}^T \log \pi_\theta(s_t, a_t) + \sum_{t=0}^T \log p(s_{t+1} | s_t, a_t)
+\]</span></p>
+<p><span class="math inline">\(\log p_0 (s_0)\)</span> and <span class="math inline">\(\log p(s_{t+1} | s_t, a_t)\)</span> do not depend on the parameters <span class="math inline">\(\theta\)</span> (they are defined by the MDP), so the gradient of the log-likelihood is simply:</p>
+<p><span class="math display">\[
+    \nabla_\theta \log \rho_\theta(\tau) = \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t)
+\]</span></p>
+<p><span class="math inline">\(\nabla_\theta \log \pi_\theta(s_t, a_t)\)</span> is called the <strong>score function</strong>.</p>
+<p>This is the main reason why policy gradient algorithms are used: the gradient is independent from the MDP dynamics, allowing <strong>model-free</strong> learning. The policy gradient is then given by:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{\tau \sim \rho_\theta}[\sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, R(\tau) ] =  \mathbb{E}_{\tau \sim \rho_\theta}[ \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, (\sum_{t=0}^T \gamma^t r_{t+1})]
+\]</span></p>
+<p>Estimating the policy gradient now becomes straightforward using Monte Carlo sampling. The resulting algorithm is called the <strong>REINFORCE</strong> algorithm <span class="citation" data-cites="Williams1992">[@Williams1992]</span>:</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+REINFORCE algorithm
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>while</strong> not converged:</p>
+<ul>
+<li><p>Sample <span class="math inline">\(N\)</span> trajectories <span class="math inline">\(\{\tau_i\}\)</span> using the current policy <span class="math inline">\(\pi_\theta\)</span> and observe the returns <span class="math inline">\(\{R(\tau_i)\}\)</span>.</p></li>
+<li><p>Estimate the policy gradient as an average over the trajectories:</p></li>
+</ul>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) \approx \frac{1}{N} \sum_{i=1}^N \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, R(\tau_i)
+\]</span></p>
+<ul>
+<li>Update the policy using gradient ascent:</li>
+</ul>
+<p><span class="math display">\[
+    \theta \leftarrow \theta + \eta \, \nabla_\theta J(\theta)
+\]</span></p>
+</div>
+</div>
+<p>While very simple, the REINFORCE algorithm does not work very well in practice:</p>
+<ol type="1">
+<li>The returns <span class="math inline">\(\{R(\tau_i)\}\)</span> have a very high variance (as the Q-values in value-based methods), which is problematic for NNs.</li>
+<li>It requires a lot of episodes to converge (sample inefficient).</li>
+<li>It only works with <strong>online</strong> learning: trajectories must be frequently sampled and immediately used to update the policy.</li>
+<li>The problem must be episodic (<span class="math inline">\(T\)</span> finite).</li>
+</ol>
+<p>However, it has two main advantages:</p>
+<ol type="1">
+<li>It is a <strong>model-free</strong> method, i.e.&nbsp;one does not need to know anything about the MDP.</li>
+<li>It also works on <strong>partially observable</strong> problems (POMDP): as the return is computed over complete trajectories, it does not matter if the states are not Markovian.</li>
+</ol>
+<p>The methods presented in this section basically try to solve the limitations of REINFORCE (high variance, sample efficiency, online learning) to produce efficient policy gradient algorithms.</p>
+</section>
+<section id="reducing-the-variance" class="level3">
+<h3 class="anchored" data-anchor-id="reducing-the-variance">Reducing the variance</h3>
+<p>The main problem with the REINFORCE algorithm is the <strong>high variance</strong> of the policy gradient. This variance comes from the fact that we learn stochastic policies (it is often unlikely to generate twice the exact same trajectory) in stochastic environments (rewards are stochastic, the same action in the same state may receive). Two trajectories which are identical at the beginning will be associated with different returns depending on the stochasticity of the policy, the transition probabilities and the probabilistic rewards.</p>
+<p>Consider playing a game like chess with always the same opening, and then following a random policy. You may end up winning (<span class="math inline">\(R=1\)</span>) or losing (<span class="math inline">\(R=-1\)</span>) with some probability. The initial actions of the opening will receive a policy gradient which is sometimes positive, sometimes negative: were these actions good or bad? Should they be reinforced? In supervised learning, this would mean that the same image of a cat will be randomly associated to the labels “cat” or “dog” during training: the NN will not like it.</p>
+<p>In supervised learning, there is no problem of variance in the outputs, as training sets are fixed. This is in contrary very hard to ensure in deep RL and constitutes one of its main limitations. The only direct solution is to sample enough trajectories and hope that the average will be able to smooth the variance. The problem is even worse in the following conditions:</p>
+<ul>
+<li>High-dimensional action spaces: it becomes difficult to sample the environment densely enough if many actions are possible.</li>
+<li>Long horizons: the longer the trajectory, the more likely it will be unique.</li>
+<li>Finite samples: if we cannot sample enough trajectories, the high variance can introduce a bias in the gradient, leading to poor convergence.</li>
+</ul>
+<p>See <a href="https://medium.com/mlreview/making-sense-of-the-bias-variance-trade-off-in-deep-reinforcement-learning-79cf1e83d565" class="uri">https://medium.com/mlreview/making-sense-of-the-bias-variance-trade-off-in-deep-reinforcement-learning-79cf1e83d565</a> for a nice explanation of the bias/variance trade-off in deep RL.</p>
+<p>Another related problem is that the REINFORCE gradient is sensitive to <strong>reward scaling</strong>. Let’s consider a simple MDP where only two trajectories <span class="math inline">\(\tau_1\)</span> and <span class="math inline">\(\tau_2\)</span> are possible. Depending on the choice of the reward function, the returns may be different:</p>
+<ol type="1">
+<li><span class="math inline">\(R(\tau_1) = 1\)</span> and <span class="math inline">\(R(\tau_2) = -1\)</span></li>
+<li><span class="math inline">\(R(\tau_1) = 3\)</span> and <span class="math inline">\(R(\tau_2) = 1\)</span></li>
+</ol>
+<p>In both cases, the policy should select the trajectory <span class="math inline">\(\tau_1\)</span>. However, the policy gradient for <span class="math inline">\(\tau_2\)</span> will change its sign between the two cases, although the problem is the same! What we want to do is to maximize the returns, regardless the absolute value of the rewards, but the returns are unbounded. Because of the non-stationarity of the problem (the agent becomes better with training, so the returns of the sampled trajectories will increase), the policy gradients will increase over time, what is linked to the variance problem. Value-based methods addressed this problem by using <strong>target networks</strong>, but it is not a perfect solution (the gradients become biased).</p>
+<p>A first simple but effective idea to solve both problems would be to subtract the mean of the sampled returns from the returns:</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+REINFORCE algorithm with baseline
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>while</strong> not converged:</p>
+<ul>
+<li><p>Sample <span class="math inline">\(N\)</span> trajectories <span class="math inline">\(\{\tau_i\}\)</span> using the current policy <span class="math inline">\(\pi_\theta\)</span> and observe the returns <span class="math inline">\(\{R(\tau_i)\}\)</span>.</p></li>
+<li><p>Compute the mean return: <span class="math display">\[
+  \hat{R} = \frac{1}{N} \sum_{i=1}^N R(\tau_i)
+\]</span></p></li>
+<li><p>Estimate the policy gradient as an average over the trajectories: <span class="math display">\[
+  \nabla_\theta J(\theta) \approx \frac{1}{N} \sum_{i=1}^N \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, ( R(\tau_i) - \hat{R})
+\]</span></p></li>
+<li><p>Update the policy using gradient ascent: <span class="math display">\[
+  \theta \leftarrow \theta + \eta \, \nabla_\theta J(\theta)
+\]</span></p></li>
+</ul>
+</div>
+</div>
+<p>This obviously solves the reward scaling problem, and reduces the variance of the gradients. But are we allowed to do this (i.e.&nbsp;does it introduce a bias to the gradient)? <span class="citation" data-cites="Williams1992">@Williams1992</span> showed that subtracting a constant <span class="math inline">\(b\)</span> from the returns still leads to an unbiased estimate of the gradient:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{\tau \sim \rho_\theta}[\nabla_\theta \log \rho_\theta (\tau) \, (R(\tau) -b) ]
+\]</span></p>
+<p>The proof is actually quite simple:</p>
+<p><span class="math display">\[
+\begin{aligned}
+    \mathbb{E}_{\tau \sim \rho_\theta}[\nabla_\theta \log \rho_\theta (\tau) \, b ] &amp; = \int_\tau \rho_\theta (\tau) \nabla_\theta \log \rho_\theta (\tau) \, b \, d\tau \\
+    &amp; = \int_\tau \nabla_\theta  \rho_\theta (\tau) \, b \, d\tau \\
+    &amp;= b \, \nabla_\theta \int_\tau \rho_\theta (\tau) \, d\tau \\
+    &amp;=  b \, \nabla_\theta 1 \\
+    &amp;= 0
+\end{aligned}
+\]</span></p>
+<p>As long as the constant <span class="math inline">\(b\)</span> does not depend on <span class="math inline">\(\theta\)</span>, the estimator is unbiased. The resulting algorithm is called <strong>REINFORCE with baseline</strong>. <span class="citation" data-cites="Williams1992">@Williams1992</span> has actually showed that the best baseline (the one which also reduces the variance) is the mean return weighted by the square of the gradient of the log-likelihood:</p>
+<p><span class="math display">\[
+    b = \frac{\mathbb{E}_{\tau \sim \rho_\theta}[(\nabla_\theta \log \rho_\theta (\tau))^2 \, R(\tau)]}{\mathbb{E}_{\tau \sim \rho_\theta}[(\nabla_\theta \log \rho_\theta (\tau))^2]}
+\]</span></p>
+<p>but the mean reward actually work quite well. Advantage actor-critic methods replace the constant <span class="math inline">\(b\)</span> with an estimate of the value of each state <span class="math inline">\(\hat{V}(s_t)\)</span>.</p>
+</section>
+</section>
+<section id="policy-gradient-theorem" class="level2">
+<h2 class="anchored" data-anchor-id="policy-gradient-theorem">Policy Gradient theorem</h2>
+<p>Let’s have another look at the REINFORCE estimate of the policy gradient after sampling:</p>
+<p><span class="math display">\[
+   \nabla_\theta J(\theta) \approx \frac{1}{N} \sum_{i=1}^N \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, R(\tau_i) = \frac{1}{N} \sum_{i=1}^N (\sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) ) \, (\sum_{t'=0}^T \gamma^{t'} \, r(s_{t'}, a_{t'}, s_{t'+1}) )
+\]</span></p>
+<p>For each transition <span class="math inline">\((s_t, a_t)\)</span>, the gradient of its log-likelihood (<em>score function</em>) <span class="math inline">\(\nabla_\theta \log \pi_\theta(s_t, a_t) )\)</span> is multiplied by the return of the whole episode <span class="math inline">\(R(\tau) = \sum_{t'=0}^T \gamma^{t'} \, r(s_{t'}, a_{t'}, s_{t'+1})\)</span>. However, the <strong>causality principle</strong> dictates that the reward received at <span class="math inline">\(t=0\)</span> does not depend on actions taken in the future, so we can simplify the return for each transition:</p>
+<p><span class="math display">\[
+\nabla_\theta J(\theta) \approx \frac{1}{N} \sum_{i=1}^N (\sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t)  \, \sum_{t'=t}^T \gamma^{t'-t} \, r(s_{t'}, a_{t'}, s_{t'+1}) )
+\]</span></p>
+<p>The quantity <span class="math inline">\(R_t = \sum_{t'=t}^T \gamma^{t'-t} \, r(s_{t'}, a_{t'}, s_{t'+1})\)</span> is the return (or <strong>reward to-go</strong>) after the transition <span class="math inline">\((s_t, a_t)\)</span>, i.e.&nbsp;the discounted sum of future rewards. Quite obviously, the Q-value of that action is the mathematical expectation of this quantity.</p>
+<p><span class="math display">\[
+\nabla_\theta J(\theta) \approx \frac{1}{N} \sum_{i=1}^N \sum_{t=0}^T \nabla_\theta \log \pi_\theta(s_t, a_t) \, R_t
+\]</span></p>
+<div id="fig-rewardtogo" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rewardtogo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/rewardtogo.png" class="img-fluid figure-img" style="width:50.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rewardtogo-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: The reward to-go is the sum of rewards gathered during a single trajectory after a transition <span class="math inline">\((s, a)\)</span>. The Q-value of the action <span class="math inline">\((s, a)\)</span> is the expectation of the reward to-go. Source: S. Levine’s lecture <a href="http://rll.berkeley.edu/deeprlcourse/" class="uri">http://rll.berkeley.edu/deeprlcourse/</a>.
+</figcaption>
+</figure>
+</div>
+<p><span class="citation" data-cites="Sutton1999">@Sutton1999</span> showed that the policy gradient can be estimated by replacing the return of the sampled trajectory with the Q-value of each action, what leads to the <strong>policy gradient theorem</strong>:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s \sim \rho_\theta, a \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(s, a) \, Q^{\pi_\theta}(s, a)]
+\]</span></p>
+<p>where <span class="math inline">\(\rho_\theta\)</span> is the distribution of states reachable under the policy <span class="math inline">\(\pi_\theta\)</span>. Because the actual return <span class="math inline">\(R(\tau)\)</span> is replaced by its expectation <span class="math inline">\(Q^{\pi_\theta}(s, a)\)</span>, the policy gradient is now a mathematical expectation over <strong>single transitions</strong> instead of complete trajectories, allowing <strong>bootstrapping</strong> as in temporal difference methods.</p>
+<p>One clearly sees that REINFORCE is actually a special case of the policy gradient theorem, where the Q-value of an action replaces the return obtained during the corresponding trajectory.</p>
+<p>The problem is of course that the true Q-value of the actions is as unknown as the policy. However, <span class="citation" data-cites="Sutton1999">@Sutton1999</span> showed that it is possible to estimate the Q-values with a function approximator <span class="math inline">\(Q_\varphi(s, a)\)</span> with parameters <span class="math inline">\(\varphi\)</span> and obtain an unbiased estimation:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s \sim \rho_\theta, a \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(s, a) \, Q_\varphi(s, a))]
+\]</span></p>
+<p>Formally, the Q-value approximator must respect the Compatible Function Approximation Theorem, which states that the value approximator must be compatible with the policy (<span class="math inline">\(\nabla_\varphi Q_\varphi(s, a) = \nabla_\theta \log \pi_\theta(s, a)\)</span>) and minimize the mean-square error with the true Q-values <span class="math inline">\(\mathbb{E}_{s \sim \rho^\pi, a \sim \pi_\theta} [(Q^{\pi_\theta}(s, a) - Q_\varphi(s, a))^2]\)</span>. In the algorithms presented in this section, these conditions are either met or neglected.</p>
+<p>The resulting algorithm belongs to the <strong>actor-critic</strong> class, in the sense that:</p>
+<ul>
+<li>The <strong>actor</strong> <span class="math inline">\(\pi_\theta(s, a)\)</span> learns to approximate the policy by using the policy gradient.</li>
+<li>The <strong>critic</strong> <span class="math inline">\(Q_\varphi(s, a)\)</span> learns to estimate the Q-values of the actions generated by the policy.</li>
+</ul>
+<p><a href="#fig-actorcriticpolicy" class="quarto-xref">Figure&nbsp;4</a> shows the architecture of the algorithm. The only problem left is to provide the critic with the true Q-values (Bellman targets).</p>
+<div id="fig-actorcriticpolicy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-actorcriticpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/policygradient.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actorcriticpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Architecture of the policy gradient (PG) method.
+</figcaption>
+</figure>
+</div>
+<p>The critic can be trained with any advantage estimator, including Q-learning. It is common to use the DQN loss (or any variant of it: double DQN, n-step, etc) for the critic.</p>
+<p><span class="math display">\[
+\mathcal{L}(\varphi) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta} [(r(s, a, s') + \gamma \, Q_{\varphi'}(s', \text{argmax}_{a'} Q_\varphi (s', a')) - Q_\varphi (s, a) )^2]
+\]</span></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

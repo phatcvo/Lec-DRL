@@ -10,6 +10,3 @@ Recurrent attention models (RAM…) for partially observable problems.
 Model-based RL to reduce the sample complexity by incorporating a model of the environment.
 Application of deep RL to robotics
 One could extend the list and talk about hierarchical RL, inverse RL, imitation-based RL, etc…
-
-
-Using the template [colorful ECCV paper](http://richzhang.github.io/colorization/). See how the webpage looks [here](https://richzhang.github.io/webpage-template).

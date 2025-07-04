@@ -1,305 +1,704 @@
-<script src="http://www.google.com/jsapi" type="text/javascript"></script> 
-<script type="text/javascript">google.load("jquery", "1.3.2");</script>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
-<style type="text/css">
-	body {
-		font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
-		font-weight:300;
-		font-size:18px;
-		margin-left: auto;
-		margin-right: auto;
-		width: 1100px;
-	}
-	
-	h1 {
-		font-size:32px;
-		font-weight:300;
-	}
-	
-	.disclaimerbox {
-		background-color: #eee;		
-		border: 1px solid #eeeeee;
-		border-radius: 10px ;
-		-moz-border-radius: 10px ;
-		-webkit-border-radius: 10px ;
-		padding: 20px;
-	}
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
 
-	video.header-vid {
-		height: 140px;
-		border: 1px solid black;
-		border-radius: 10px ;
-		-moz-border-radius: 10px ;
-		-webkit-border-radius: 10px ;
-	}
-	
-	img.header-img {
-		height: 140px;
-		border: 1px solid black;
-		border-radius: 10px ;
-		-moz-border-radius: 10px ;
-		-webkit-border-radius: 10px ;
-	}
-	
-	img.rounded {
-		border: 1px solid #eeeeee;
-		border-radius: 10px ;
-		-moz-border-radius: 10px ;
-		-webkit-border-radius: 10px ;
-	}
-	
-	a:link,a:visited
-	{
-		color: #1367a7;
-		text-decoration: none;
-	}
-	a:hover {
-		color: #208799;
-	}
-	
-	td.dl-link {
-		height: 160px;
-		text-align: center;
-		font-size: 22px;
-	}
-	
-	.layered-paper-big { /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-		box-shadow:
-		0px 0px 1px 1px rgba(0,0,0,0.35), /* The top layer shadow */
-		5px 5px 0 0px #fff, /* The second layer */
-		5px 5px 1px 1px rgba(0,0,0,0.35), /* The second layer shadow */
-		10px 10px 0 0px #fff, /* The third layer */
-		10px 10px 1px 1px rgba(0,0,0,0.35), /* The third layer shadow */
-		15px 15px 0 0px #fff, /* The fourth layer */
-		15px 15px 1px 1px rgba(0,0,0,0.35), /* The fourth layer shadow */
-		20px 20px 0 0px #fff, /* The fifth layer */
-		20px 20px 1px 1px rgba(0,0,0,0.35), /* The fifth layer shadow */
-		25px 25px 0 0px #fff, /* The fifth layer */
-		25px 25px 1px 1px rgba(0,0,0,0.35); /* The fifth layer shadow */
-		margin-left: 10px;
-		margin-right: 45px;
-	}
-
-	.paper-big { /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-		box-shadow:
-		0px 0px 1px 1px rgba(0,0,0,0.35); /* The top layer shadow */
-
-		margin-left: 10px;
-		margin-right: 45px;
-	}
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-	.layered-paper { /* modified from: http://css-tricks.com/snippets/css/layered-paper/ */
-		box-shadow:
-		0px 0px 1px 1px rgba(0,0,0,0.35), /* The top layer shadow */
-		5px 5px 0 0px #fff, /* The second layer */
-		5px 5px 1px 1px rgba(0,0,0,0.35), /* The second layer shadow */
-		10px 10px 0 0px #fff, /* The third layer */
-		10px 10px 1px 1px rgba(0,0,0,0.35); /* The third layer shadow */
-		margin-top: 5px;
-		margin-left: 10px;
-		margin-right: 30px;
-		margin-bottom: 5px;
-	}
-	
-	.vert-cent {
-		position: relative;
-		top: 50%;
-		transform: translateY(-50%);
-	}
-	
-	hr
-	{
-		border: 0;
-		height: 1px;
-		background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0));
-	}
+<title>Deep Reinforcement Learning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
 </style>
 
-<html>
-<head>
-	<title>This is my paper title</title>
-	<meta property="og:image" content="Path to my teaser.png"/> <!-- Facebook automatically scrapes this. Go to https://developers.facebook.com/tools/debug/ if you update and want to force Facebook to rescrape. -->
-	<meta property="og:title" content="Creative and Descriptive Paper Title." />
-	<meta property="og:description" content="Paper description." />
 
-	<!-- Get from Google Analytics -->
-	<!-- Global site tag (gtag.js) - Google Analytics -->
-	<script async src=""></script> 
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
-		gtag('js', new Date());
+<script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="index_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap-bb8a42f168430693d1c0fc26666c4cdf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
-		gtag('config', 'UA-75863369-6');
-	</script>
+
 </head>
 
-<body>
-	<br>
-	<center>
-		<span style="font-size:36px">Creative and Descriptive Paper Title</span>
-		<table align=center width=600px>
-			<table align=center width=600px>
-				<tr>
-					<td align=center width=100px>
-						<center>
-							<span style="font-size:24px"><a href="https://en.wikipedia.org/wiki/James_J._Gibson">First Author</a></span>
-						</center>
-					</td>
-					<td align=center width=100px>
-						<center>
-							<span style="font-size:24px"><a href="https://en.wikipedia.org/wiki/James_J._Gibson">Second Author</a></span>
-						</center>
-					</td>
-					<td align=center width=100px>
-						<center>
-							<span style="font-size:24px"><a href="https://en.wikipedia.org/wiki/James_J._Gibson">Third Author</a></span>
-						</center>
-					</td>
-				</tr>
-			</table>
-			<table align=center width=250px>
-				<tr>
-					<td align=center width=120px>
-						<center>
-							<span style="font-size:24px"><a href=''>[Paper]</a></span>
-						</center>
-					</td>
-					<td align=center width=120px>
-						<center>
-							<span style="font-size:24px"><a href='https://github.com/richzhang/webpage-template'>[GitHub]</a></span><br>
-						</center>
-					</td>
-				</tr>
-			</table>
-		</table>
-	</center>
+<body class="fullcontent quarto-light">
 
-	<center>
-		<table align=center width=850px>
-			<tr>
-				<td width=260px>
-					<center>
-						<img class="round" style="width:500px" src="./resources/teaser.png"/>
-					</center>
-				</td>
-			</tr>
-		</table>
-		<table align=center width=850px>
-			<tr>
-				<td>
-					This was a template originally made for <a href="http://richzhang.github.io/colorization/">Colorful Image Colorization</a>. The code can be found in this <a href="https://github.com/richzhang/webpage-template">repository</a>.
-				</td>
-			</tr>
-		</table>
-	</center>
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
 
-	<hr>
+<main class="content" id="quarto-document-content">
 
-	<table align=center width=850px>
-		<center><h1>Abstract</h1></center>
-		<tr>
-			<td>
-				This is my abstract.
-			</td>
-		</tr>
-	</table>
-	<br>
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Deep Reinforcement Learning</h1>
+</div>
 
-	<hr>
-	<center><h1>Talk</h1></center>
-	<p align="center">
-		<iframe width="660" height="395" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen align="center"></iframe>
-	</p>
 
-	<table align=center width=800px>
-		<br>
-		<tr>
-			<center>
-				<span style="font-size:28px"><a href=''>[Slides]</a>
-				</span>
-			</center>
-		</tr>
-	</table>
-	<hr>
 
-	<center><h1>Code</h1></center>
+<div class="quarto-title-meta">
 
-	<table align=center width=420px>
-		<center>
-			<tr>
-				<td>
-				</td>
-			</tr>
-		</center>
-	</table>
-	<table align=center width=400px>
-		<tr>
-			<td align=center width=400px>
-				<center>
-					<td><img class="round" style="width:450px" src="./resources/method_diagram.png"/></td>
-				</center>
-			</td>
-		</tr>
-	</table>
-	<table align=center width=850px>
-		<center>
-			<tr>
-				<td>
-					Short description if wanted
-				</td>
-			</tr>
-		</center>
-	</table>
-	<table align=center width=800px>
-		<br>
-		<tr><center>
-			<span style="font-size:28px">&nbsp;<a href='https://github.com/richzhang/webpage-template'>[GitHub]</a>
-			</center>
-		</span>
-	</table>
-	<br>
-	<hr>
-	<table align=center width=450px>
-		<center><h1>Paper and Supplementary Material</h1></center>
-		<tr>
-			<td><a href=""><img class="layered-paper-big" style="height:175px" src="./resources/paper.png"/></a></td>
-			<td><span style="font-size:14pt">F. Author, S. Author, T. Author.<br>
-				<b>Creative and Descriptive Paper Title.</b><br>
-				In Conference, 20XX.<br>
-				(hosted on <a href="">ArXiv</a>)<br>
-				<!-- (<a href="./resources/camera-ready.pdf">camera ready</a>)<br> -->
-				<span style="font-size:4pt"><a href=""><br></a>
-				</span>
-			</td>
-		</tr>
-	</table>
-	<br>
+    
+  
+    
+  </div>
+  
 
-	<table align=center width=600px>
-		<tr>
-			<td><span style="font-size:14pt"><center>
-				<a href="./resources/bibtex.txt">[Bibtex]</a>
-			</center></td>
-		</tr>
-	</table>
 
-	<hr>
-	<br>
+</header>
 
-	<table align=center width=900px>
-		<tr>
-			<td width=400px>
-				<left>
-					<center><h1>Acknowledgements</h1></center>
-					This template was originally made by <a href="http://web.mit.edu/phillipi/">Phillip Isola</a> and <a href="http://richzhang.github.io/">Richard Zhang</a> for a <a href="http://richzhang.github.io/colorization/">colorful</a> ECCV project; the code can be found <a href="https://github.com/richzhang/webpage-template">here</a>.
-				</left>
-			</td>
-		</tr>
-	</table>
 
-<br>
-</body>
-</html>
+<section id="lectures" class="level2">
+<h2 class="anchored" data-anchor-id="lectures">Lectures</h2>
+<section id="introduction" class="level4">
+<h4 class="anchored" data-anchor-id="introduction">0 - Introduction</h4>
+<div id="aa0f8963" class="cell" data-execution_count="2">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="8">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 80%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>0 - Introduction</strong><br>
+Introduction to the main concepts of reinforcement learning and showcasing of the current applications.</td>
+<td><a href="slides/0-Introduction.html" target="_blank">Slide</a>, <a href="posts/0-Introduction.html" target="_blank">Book</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="tabular-rl" class="level4">
+<h4 class="anchored" data-anchor-id="tabular-rl">1 - Tabular RL</h4>
+<div id="d15f9a91" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="9">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 80%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>1.1 - Sampling and Bandits</strong><br>
+n-armed bandits, the simplest RL setting that can be solved by sampling.</td>
+<td><a href="slides/1.1-Bandits.html" target="_blank">Slide</a>, <a href="posts/1.1-Bandits.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>1.2 - Markov Decision Processes and Dynamic Programming</strong><br>
+MDPs are the basic RL framework. The value functions and the Bellman equations fully characterize a MDP. Dynamic programming is a model-based method allowing to iteratively solve the Bellman equations.</td>
+<td><a href="slides/1.2-MDP.html" target="_blank">Slide</a>, <a href="posts/1.2-MDP.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>1.3 - Monte Carlo control</strong><br>
+Monte Carlo control estimates value functions through sampling of complete episodes and infers the optimal policy using action selection, either on- or off-policy.</td>
+<td><a href="slides/1.3-MC.html" target="_blank">Slide</a>, <a href="posts/1.3-MC.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>1.4 - Temporal Difference</strong><br>
+TD algorithms allow the learning of value functions using single transitions. Q-learning is the famous off-policy variant.</td>
+<td><a href="slides/1.4-TD.html" target="_blank">Slide</a>, <a href="posts/1.4-TD.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>1.5 - Function Approximation</strong><br>
+Value functions can actually be approximated by any function approximator, allowing to apply RL to continuous state of action spaces.</td>
+<td><a href="slides/1.5-FunctionApproximation.html" target="_blank">Slide</a>, <a href="posts/1.5-FunctionApproximation.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>1.6 - Deep Neural Networks</strong><br>
+Quick overview of the main neural network architectures needed for the rest of the course.</td>
+<td><a href="slides/1.6-DeepNetworks.html" target="_blank">Slide</a>, <a href="posts/1.6-DeepNetworks.html" target="_blank">Book</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="model-free-rl" class="level4">
+<h4 class="anchored" data-anchor-id="model-free-rl">2 - Model-free RL</h4>
+<div id="3f0cdddf" class="cell" data-execution_count="4">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="10">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 80%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>2.1 - DQN: Deep Q-Network</strong><br>
+DQN (Mnih et al.&nbsp;2013) was the first successful application of deep networks to the RL problem. It has been applied to Atari video games and started the interest for deep RL methods.</td>
+<td><a href="slides/2.1-DQN.html" target="_blank">Slide</a>, <a href="posts/2.1-DQN.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>2.2 - Beyond DQN</strong><br>
+Various extensions to the DQN algorithms have been proposed in the following years: distributional learning, parameter noise, distributed learning or recurrent architectures.</td>
+<td><a href="slides/2.2-DQNvariants.html" target="_blank">Slide</a>, <a href="posts/2.2-DQNvariants.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>2.3 - PG: Policy Gradient</strong><br>
+Policy gradient methods allow to directly learn the policy without requiring action selection over value functions.</td>
+<td><a href="slides/2.3-PG.html" target="_blank">Slide</a>, <a href="posts/2.3-PG.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>2.4 - AC: Actor-Critic</strong><br>
+A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gradient from multiple parallel workers.</td>
+<td><a href="slides/2.4-ActorCritic.html" target="_blank">Slide</a>, <a href="posts/2.4-ActorCritic.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>2.5 - DPG: Deterministic Policy Gradient</strong><br>
+DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics.</td>
+<td><a href="slides/2.5-DPG.html" target="_blank">Slide</a>, <a href="posts/2.5-DPG.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>2.6 - PPO: Proximal Policy Optimization</strong><br>
+PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates.</td>
+<td><a href="slides/2.6-PPO.html" target="_blank">Slide</a>, <a href="posts/2.6-PPO.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>2.7 - ACER: Actor-Critic with Experience Replay</strong><br>
+The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.</td>
+<td><a href="slides/2.7-ACER.html" target="_blank">Slide</a>, <a href="posts/2.7-ACER.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>2.8 - SAC: Soft Actor-Critic</strong><br>
+Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.</td>
+<td><a href="slides/2.8-EntropyRL.html" target="_blank">Slide</a>, <a href="posts/2.8-EntropyRL.html" target="_blank">Book</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="model-based-rl" class="level4">
+<h4 class="anchored" data-anchor-id="model-based-rl">3 - Model-based RL</h4>
+<div id="c54f9add" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="11">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 80%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>3.1 - Model-based RL</strong><br>
+Model-based RL uses a world model to emulate the future. Dyna-like architectures use these rollouts to augment MF algorithms.</td>
+<td><a href="slides/3.1-ModelBased.html" target="_blank">Slide</a>, <a href="posts/3.1-ModelBased.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>3.2 - Planning with learned World models</strong><br>
+Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.</td>
+<td><a href="slides/3.2-LearnedModels.html" target="_blank">Slide</a>, <a href="posts/3.2-LearnedModels.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>3.3 - Planning (MPC, TDM)</strong>\</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Model-based learning is not only used to augment MF methods with imaginary rollouts.</td>
+<td><a href="slides/3.3-Planning.html" target="_blank">Slide</a>, <a href="posts/3.3-Planning.html" target="_blank">Book</a></td>
+</tr>
+<tr class="odd">
+<td><strong>3.4 - World models, Dreamer</strong><br>
+The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.</td>
+<td><a href="slides/3.4-WorldModels.html" target="_blank">Slide</a>, <a href="posts/3.4-WorldModels.html" target="_blank">Book</a></td>
+</tr>
+<tr class="even">
+<td><strong>3.5 - AlphaGo</strong><br>
+AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search).</td>
+<td><a href="slides/3.5-AlphaGo.html" target="_blank">Slide</a>, <a href="posts/3.5-AlphaGo.html" target="_blank">Book</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<section id="outlook" class="level4">
+<h4 class="anchored" data-anchor-id="outlook">4 - Outlook</h4>
+<div id="e752686a" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display cell-output-markdown" data-execution_count="12">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 80%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Details</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>5.1 - Outlook</strong><br>
+Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc.</td>
+<td><a href="slides/4.1-Outlook.html" target="_blank">Slide</a>, <a href="posts/4.1-Outlook.html" target="_blank">Book</a></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="recommended-readings" class="level2">
+<h2 class="anchored" data-anchor-id="recommended-readings">Recommended readings</h2>
+<ul>
+<li>Richard Sutton and Andrew Barto (2017). Reinforcement Learning: An Introduction. MIT press.</li>
+</ul>
+<p><a href="http://incompleteideas.net/book/the-book-2nd.html" class="uri">http://incompleteideas.net/book/the-book-2nd.html</a></p>
+<ul>
+<li>CS294 course of Sergey Levine at Berkeley.</li>
+</ul>
+<p><a href="http://rll.berkeley.edu/deeprlcourse/" class="uri">http://rll.berkeley.edu/deeprlcourse/</a></p>
+<ul>
+<li>Reinforcement Learning course by David Silver at UCL.</li>
+</ul>
+<p><a href="http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html" class="uri">http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html</a></p>
+</section>
 
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

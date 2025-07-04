@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>actorcritic</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="2.4-ActorCritic_files/libs/clipboard/clipboard.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/popper.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/anchor.min.js"></script>
+<link href="2.4-ActorCritic_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="2.4-ActorCritic_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="2.4-ActorCritic_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="2.4-ActorCritic_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="2.4-ActorCritic_files/libs/bootstrap/bootstrap-bb8a42f168430693d1c0fc26666c4cdf.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+
+<section id="advantage-actor-critic-a3c" class="level1 unnumbered">
+<h1 class="unnumbered">Advantage Actor-Critic (A3C)</h1>
+<section id="actor-critic-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="actor-critic-algorithms">Actor-critic algorithms</h2>
+<p>The policy gradient theorem provides an actor-critic arhictecture that allow to estimate the PG from single transitions:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s \sim \rho_\theta, a \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(s, a) \, Q_\varphi(s, a))]
+\]</span></p>
+<div id="fig-actorcriticpolicy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-actorcriticpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/policygradient.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-actorcriticpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: Architecture of the policy gradient (PG) method.
+</figcaption>
+</figure>
+</div>
+<p>The critic can be trained with any advantage estimator, including Q-learning. It is common to use the DQN loss (or any variant of it: double DQN, n-step, etc) for the critic.</p>
+<p><span class="math display">\[
+\mathcal{L}(\varphi) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta} [(r(s, a, s') + \gamma \, Q_{\varphi'}(s', \text{argmax}_{a'} Q_\varphi (s', a')) - Q_\varphi (s, a) )^2]
+\]</span></p>
+<p>Most policy-gradient algorithms in this section are actor-critic architectures. The different versions of the policy gradient take the form:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s_t \sim \rho^\pi, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta (s_t, a_t) \, \psi_t ]
+\]</span></p>
+<p>where:</p>
+<ul>
+<li><p><span class="math inline">\(\psi_t = R_t\)</span> is the <strong>REINFORCE</strong> algorithm (MC sampling).</p></li>
+<li><p><span class="math inline">\(\psi_t = R_t - b\)</span> is the <strong>REINFORCE with baseline</strong> algorithm.</p></li>
+<li><p><span class="math inline">\(\psi_t = Q^\pi(s_t, a_t)\)</span> is the <strong>policy gradient theorem</strong>.</p></li>
+<li><p><span class="math inline">\(\psi_t = A^\pi(s_t, a_t)\)</span> is the <strong>advantage actor-critic</strong>.</p></li>
+<li><p><span class="math inline">\(\psi_t = r_{t+1} + \gamma \, V^\pi(s_{t+1}) - V^\pi(s_t)\)</span> is the <strong>TD actor-critic</strong>.</p></li>
+<li><p><span class="math inline">\(\psi_t = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V^\pi(s_{t+n+1}) - V^\pi(s_t)\)</span> is the <strong>n-step advanatge actor-critic</strong> (A2C).</p></li>
+</ul>
+<p>Generally speaking:</p>
+<ul>
+<li>the more <span class="math inline">\(\psi_t\)</span> relies on <strong>real rewards</strong> (e.g.&nbsp;<span class="math inline">\(R_t\)</span>), the more the gradient will be correct on average (<strong>small bias</strong>), but the more it will vary (<strong>high variance</strong>). This increases the sample complexity: we need to average more samples to correctly estimate the gradient.</li>
+<li>the more <span class="math inline">\(\psi_t\)</span> relies on <strong>estimations</strong> (e.g.&nbsp;the TD error), the more stable the gradient (<strong>small variance</strong>), but the more incorrect it is (<strong>high bias</strong>). This can lead to suboptimal policies, i.e.&nbsp;local optima of the objective function.</li>
+</ul>
+<p>This is the classical bias/variance trade-off in machine learning. n-step advantages are an attempt to mitigate between these extrema. <span class="citation" data-cites="Schulman2015a">@Schulman2015a</span> proposed the <strong>Generalized Advantage Estimate</strong> (GAE, see Section <strong>?@sec-GAE</strong>) to further control the bias/variance trade-off.</p>
+<p><em>Note:</em> A2C is actually derived from the A3C algorithm presented later, but it is simpler to explain it first. See <a href="https://openai.com/index/openai-baselines-acktr-a2c/" class="uri">https://openai.com/index/openai-baselines-acktr-a2c/</a> for an explanation of the reasons. A good explanation of A2C and A3C with Python code is available at <a href="https://cgnicholls.github.io/reinforcement-learning/2017/03/27/a3c.html" class="uri">https://cgnicholls.github.io/reinforcement-learning/2017/03/27/a3c.html</a>.</p>
+</section>
+<section id="advantage-actor-critic-a2c" class="level2">
+<h2 class="anchored" data-anchor-id="advantage-actor-critic-a2c">Advantage Actor-Critic (A2C)</h2>
+<p>The first aspect of A2C is that it relies on n-step updating, which is a trade-off between MC and TD:</p>
+<ul>
+<li>MC waits until the end of an episode to update the value of an action using the reward to-go (sum of obtained rewards) <span class="math inline">\(R(s, a)\)</span>.</li>
+<li>TD updates immediately the action using the immediate reward <span class="math inline">\(r(s, a, s')\)</span> and approximates the rest with the value of the next state <span class="math inline">\(V^\pi(s)\)</span>.</li>
+<li>n-step uses the <span class="math inline">\(n\)</span> next immediate rewards and approximates the rest with the value of the state visited <span class="math inline">\(n\)</span> steps later.</li>
+</ul>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s_t \sim \rho^\pi, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(s_t, a_t) \, ( \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n+1}) - V_\varphi(s_t))]
+\]</span></p>
+<p>A2C has an actor-critic architecture:</p>
+<ul>
+<li>The actor outputs the policy <span class="math inline">\(\pi_\theta\)</span> for a state <span class="math inline">\(s\)</span>, i.e.&nbsp;a vector of probabilities for each action.</li>
+<li>The critic outputs the value <span class="math inline">\(V_\varphi(s)\)</span> of a state <span class="math inline">\(s\)</span>.</li>
+</ul>
+<div id="fig-a3c" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-a3c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/a2c.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-a3c-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Advantage actor-critic architecture.
+</figcaption>
+</figure>
+</div>
+<p>Having a computable formula for the policy gradient, the algorithm is rather simple:</p>
+<ol type="1">
+<li><p>Acquire a batch of transitions <span class="math inline">\((s, a, r, s')\)</span> using the current policy <span class="math inline">\(\pi_\theta\)</span> (either a finite episode or a truncated one).</p></li>
+<li><p>For each state encountered, compute the discounted sum of the next <span class="math inline">\(n\)</span> rewards <span class="math inline">\(\sum_{k=0}^{n} \gamma^{k} \, r_{t+k+1}\)</span> and use the critic to estimate the value of the state encountered <span class="math inline">\(n\)</span> steps later <span class="math inline">\(V_\varphi(s_{t+n+1})\)</span>.</p></li>
+</ol>
+<p><span class="math display">\[
+    R_t = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n+1})
+\]</span></p>
+<ol start="3" type="1">
+<li>Update the actor.</li>
+</ol>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \sum_t \nabla_\theta \log \pi_\theta(s_t, a_t) \, (R_t - V_\varphi(s_t))
+\]</span></p>
+<ol start="4" type="1">
+<li>Update the critic to minimize the TD error between the estimated value of a state and its true value.</li>
+</ol>
+<p><span class="math display">\[
+    \mathcal{L}(\varphi) = \sum_t (R_t - V_\varphi(s_t))^2
+\]</span></p>
+<ol start="5" type="1">
+<li>Repeat.</li>
+</ol>
+<p>This is not very different in essence from REINFORCE (sample transitions, compute the return, update the policy), apart from the facts that episodes do not need to be finite and that a critic has to be learned in parallel. A more detailed pseudo-algorithm for a single A2C learner is the following:</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+A2C algorithm for a single worker/learner
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Initialize the actor <span class="math inline">\(\pi_\theta\)</span> and the critic <span class="math inline">\(V_\varphi\)</span> with random weights.</p></li>
+<li><p>Observe the initial state <span class="math inline">\(s_0\)</span>.</p></li>
+<li><p><strong>while</strong> not converged:</p>
+<ul>
+<li><p>Initialize empty episode minibatch.</p></li>
+<li><p>for <span class="math inline">\(k \in [0, n]\)</span>: # Sample episode</p>
+<ul>
+<li><p>Select a action <span class="math inline">\(a_k\)</span> using the actor <span class="math inline">\(\pi_\theta\)</span>.</p></li>
+<li><p>Perform the action <span class="math inline">\(a_k\)</span> and observe the next state <span class="math inline">\(s_{k+1}\)</span> and the reward <span class="math inline">\(r_{k+1}\)</span>.</p></li>
+<li><p>Store <span class="math inline">\((s_k, a_k, r_{k+1})\)</span> in the episode minibatch.</p></li>
+</ul></li>
+<li><p>if <span class="math inline">\(s_n\)</span> is not terminal: set <span class="math inline">\(R = V_\varphi(s_n)\)</span> with the critic, else <span class="math inline">\(R=0\)</span>.</p></li>
+<li><p>Reset gradient <span class="math inline">\(d\theta\)</span> and <span class="math inline">\(d\varphi\)</span> to 0.</p></li>
+<li><p>for <span class="math inline">\(k \in [n-1, 0]\)</span>: # Backwards iteration over the episode</p>
+<ul>
+<li><p>Update the discounted sum of rewards <span class="math inline">\(R = r_k + \gamma \, R\)</span></p></li>
+<li><p>Accumulate the policy gradient using the critic:</p></li>
+</ul>
+<p><span class="math display">\[
+      d\theta \leftarrow d\theta + \nabla_\theta \log \pi_\theta(s_k, a_k) \, (R - V_\varphi(s_k))
+  \]</span></p>
+<ul>
+<li>Accumulate the critic gradient:</li>
+</ul>
+<p><span class="math display">\[
+      d\varphi \leftarrow d\varphi + \nabla_\varphi (R - V_\varphi(s_k))^2
+  \]</span></p></li>
+<li><p>Update the actor and the critic with the accumulated gradients using gradient descent or similar:</p></li>
+</ul>
+<p><span class="math display">\[
+      \theta \leftarrow \theta + \eta \, d\theta \qquad \varphi \leftarrow \varphi + \eta \, d\varphi
+  \]</span></p></li>
+</ul>
+</div>
+</div>
+<p>Note that not all states are updated with the same horizon <span class="math inline">\(n\)</span>: the last action encountered in the sampled episode will only use the last reward and the value of the final state (TD learning), while the very first action will use the <span class="math inline">\(n\)</span> accumulated rewards. In practice it does not really matter, but the choice of the discount rate <span class="math inline">\(\gamma\)</span> will have a significant influence on the results.</p>
+<p>As many actor-critic methods, A2C performs online learning: a couple of transitions are explored using the current policy, which is immediately updated. As for value-based networks (e.g.&nbsp;DQN), the underlying NN will be affected by the correlated inputs and outputs: a single batch contains similar states and action (e.g.&nbsp;consecutive frames of a video game). The solution retained in A2C and A3C does not depend on an <em>experience replay memory</em> as DQN, but rather on the use of <strong>multiple parallel actors and learners</strong> (see Section <strong>?@sec-distributedlearning</strong>).</p>
+<p>The idea is depicted on <a href="#fig-a3carchi" class="quarto-xref">Figure&nbsp;3</a> (actually for A3C, but works with A2C). The actor and critic are stored in a global network. Multiple instances of the environment are created in different parallel threads (the <strong>workers</strong>). At the beginning of an episode, each worker receives a copy of the actor and critic weights from the global network. Each worker samples an episode (starting from different initial states, so the episodes are uncorrelated), computes the accumulated gradients and sends them back to the global network. The global networks merges the gradients and uses them to update the parameters of the policy and critic networks. The new parameters are send to each worker again, until it converges.</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Distributed A2C algorithm
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Initialize the actor <span class="math inline">\(\pi_\theta\)</span> and the critic <span class="math inline">\(V_\varphi\)</span> in the global network.</p></li>
+<li><p><strong>while</strong> not converged:</p>
+<ul>
+<li><p>for each worker <span class="math inline">\(i\)</span> in <strong>parallel</strong>:</p>
+<ul>
+<li><p>Get a copy of the global actor <span class="math inline">\(\pi_\theta\)</span> and critic <span class="math inline">\(V_\varphi\)</span>.</p></li>
+<li><p>Sample an episode of <span class="math inline">\(n\)</span> steps.</p></li>
+<li><p>Return the accumulated gradients <span class="math inline">\(d\theta_i\)</span> and <span class="math inline">\(d\varphi_i\)</span>.</p></li>
+</ul></li>
+<li><p>Wait for all workers to terminate.</p></li>
+<li><p>Merge all accumulated gradients into <span class="math inline">\(d\theta\)</span> and <span class="math inline">\(d\varphi\)</span>.</p></li>
+<li><p>Update the global actor and critic networks.</p></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<p>This solves the problem of correlated inputs and outputs, as each worker explores different regions of the environment (one can set different initial states in each worker, vary the exploration rate, etc), so the final batch of transitions used for training the global networks is much less correlated. The only drawback of this approach is that it has to be possible to explore multiple environments in parallel. This is easy to achieve in simulated environments (e.g.&nbsp;video games) but much harder in real-world systems like robots. A brute-force solution for robotics is simply to buy enough robots and let them learn in parallel <span class="citation" data-cites="Gu2017">[@Gu2017]</span>.</p>
+</section>
+<section id="asynchronous-advantage-actor-critic-a3c" class="level2">
+<h2 class="anchored" data-anchor-id="asynchronous-advantage-actor-critic-a3c">Asynchronous Advantage Actor-Critic (A3C)</h2>
+<div id="fig-a3carchi" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-a3carchi-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/a3c-parallel.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-a3carchi-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: Distributed architecture of A3C. A global network interacts asynchronously with several workers, each having a copy of the network and interacting with a separate environment. At the end of an episode, the accumulated gradients are sent back to the master network, and a new value of the parameters is sent to the workers.
+</figcaption>
+</figure>
+</div>
+<p>Asynchronous Advantage Actor-Critic <span class="citation" data-cites="Mnih2016">[A3C,@Mnih2016]</span> extends the approach of A2C by removing the need of synchronization between the workers at the end of each episode before applying the gradients. The rationale behind this is that each worker may need different times to complete its task, so they need to be synchronized. Some workers might then be idle most of the time, what is a waste of resources. Gradient merging and parameter updates are sequential operations, so no significant speedup is to be expected even if one increases the number of workers.</p>
+<p>The solution retained in A3C is to simply skip the synchronization step: each worker reads and writes the network parameters whenever it wants. Without synchronization barriers, there is of course a risk that one worker tries to read the network parameters while another writes them: the obtained parameters would be a mix of two different networks. Surprisingly, it does not matter: if the learning rate is small enough, there is anyway not a big difference between two successive versions of the network parameters. This kind of “dirty” parameter sharing is called <em>HogWild!</em> updating <span class="citation" data-cites="Niu2011">[@Niu2011]</span> and has been proven to work under certain conditions which are met here.</p>
+<p>The resulting A3C pseudocode is summarized here:</p>
+<div class="callout callout-style-default callout-note no-icon callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon no-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Distributed A3C algorithm
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><p>Initialize the actor <span class="math inline">\(\pi_\theta\)</span> and the critic <span class="math inline">\(V_\varphi\)</span> in the global network.</p></li>
+<li><p>for each worker <span class="math inline">\(i\)</span> in <strong>parallel</strong>:</p>
+<ul>
+<li><p><strong>repeat</strong>:</p>
+<ul>
+<li><p>Get a copy of the global actor <span class="math inline">\(\pi_\theta\)</span> and critic <span class="math inline">\(V_\varphi\)</span>.</p></li>
+<li><p>Sample an episode of <span class="math inline">\(n\)</span> steps.</p></li>
+<li><p>Compute the accumulated gradients <span class="math inline">\(d\theta_i\)</span> and <span class="math inline">\(d\varphi_i\)</span>.</p></li>
+<li><p>Update the global actor and critic networks asynchronously (HogWild!).</p></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<p>The workers are fully independent: their only communication is through the <strong>asynchronous</strong> updating of the global networks. This can lead to very efficient parallel implementations: in the original A3C paper <span class="citation" data-cites="Mnih2016">[@Mnih2016]</span>, they solved the same Atari games than DQN using 16 CPU cores instead of a powerful GPU, while achieving a better performance in less training time (1 day instead of 8). The speedup is almost linear: the more workers, the faster the computations, the better the performance (as the policy updates are less correlated).</p>
+<section id="entropy-regularization" class="level3">
+<h3 class="anchored" data-anchor-id="entropy-regularization">Entropy regularization</h3>
+<p>An interesting addition in A3C is the way they enforce exploration during learning. In actor-critic methods, exploration classically relies on the fact that the learned policies are stochastic (<strong>on-policy</strong>): <span class="math inline">\(\pi(s, a)\)</span> describes the probability of taking the action <span class="math inline">\(a\)</span> in the state <span class="math inline">\(s\)</span>. In discrete action spaces, the output of the actor can be a softmax layer, ensuring that all actions get a non-zero probability of being selected during training. In continuous action spaces, the executed action is sampled from the output probability distribution. However, this is often not sufficient and hard to control.</p>
+<p>In A3C, the authors added an <strong>entropy regularization</strong> term <span class="citation" data-cites="Williams1991">[@Williams1991]</span> to the policy gradient update:</p>
+<p><span class="math display">\[
+    \nabla_\theta J(\theta) =  \mathbb{E}_{s_t \sim \rho^\pi, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta(s_t, a_t) \, ( R_t - V_\varphi(s_t)) + \beta \, \nabla_\theta H(\pi_\theta(s_t))]
+\]</span></p>
+<p>For discrete actions, the entropy of the policy for a state <span class="math inline">\(s_t\)</span> is simple to compute:</p>
+<p><span class="math display">\[
+    H(\pi_\theta(s_t)) = - \sum_a \pi_\theta(s_t, a) \, \log \pi_\theta(s_t, a)
+\]</span></p>
+<p>It measures the “randomness” of the policy: if the policy is fully deterministic (the same action is systematically selected), the entropy is zero as it carries no information. If the policy is completely random, the entropy is maximal. Maximizing the entropy at the same time as the returns improves exploration by forcing the policy to be as non-deterministic as possible.</p>
+<p>See Section <strong>?@sec-maxentrl</strong> for more details on using the entropy for exploration.</p>
+</section>
+</section>
+<section id="actor-critic-neural-architectures" class="level2">
+<h2 class="anchored" data-anchor-id="actor-critic-neural-architectures">Actor-critic neural architectures</h2>
+<p>We have considered that actor-critic architectures consist of two separate neural networks, the actor <span class="math inline">\(\pi(s, a)\)</span> and the critic <span class="math inline">\(Q(s, a)\)</span> both taking the state <span class="math inline">\(s\)</span> (or observation <span class="math inline">\(o\)</span>) as an input and outputing one value per action. Each of these networks have their own loss function. They share nothing except the “data”. Is it really the best option?</p>
+<p>When working on images, the first few layers of the CNNs are likely to learn the same visual features (edges, contours). It would be more efficient to <strong>share</strong> some of the extracted features. Actor-critic architectures can share layers between the actor and the critic, sometimes up to the output layer. A compound loss sums the losses for the actor and the critic. Tensorflow/pytorch know which parameters influence which part of the loss.</p>
+<p><span class="math display">\[
+    \mathcal{L}(\theta) = \mathcal{L}_\text{actor}(\theta) + \mathcal{L}_\text{critic}(\theta)
+\]</span></p>
+<p>For pixel-based environments (Atari), the networks often share the convolutional layers. For continuous environments (Mujoco), separate networks sometimes work better than two-headed networks.</p>
+<div id="fig-sharedactorcritic" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sharedactorcritic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/shared_actorcritic.png" class="img-fluid figure-img" style="width:80.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sharedactorcritic-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: The actor and the critic can share no/some/most layers, depending on the algorithm and the application.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-continuousspaces" class="level2">
+<h2 class="anchored" data-anchor-id="sec-continuousspaces">Continuous action spaces</h2>
+<p>The actor-critic methods presented above use <strong>stochastic policies</strong> <span class="math inline">\(\pi_\theta(s, a)\)</span> assigning parameterized probabilities of being selecting to each <span class="math inline">\((s, a)\)</span> pair.</p>
+<ul>
+<li><p>When the action space is discrete, the output layer of the actor is simply a <strong>softmax</strong> layer with as many neurons as possible actions in each state, making sure the probabilities sum to one. It is then straightforward to sample an action from this layer.</p></li>
+<li><p>When the action space is continuous, one has to make an assumption on the underlying distribution. The actor learns the parameters of the distribution and the executed action is simply sampled from the parameterized distribution.</p></li>
+</ul>
+<p>Suppose that we want to control a robotic arm with <span class="math inline">\(n\)</span> degrees of freedom. An action <span class="math inline">\(\mathbf{a}\)</span> could be a vector of joint displacements:</p>
+<p><span class="math display">\[\mathbf{a} = \begin{bmatrix} \Delta \theta_1 &amp; \Delta \theta_2 &amp; \ldots \, \Delta \theta_n\end{bmatrix}^T\]</span></p>
+<p>The output layer of the policy network can very well represent this vector, but how would we implement <strong>exploration</strong>? <span class="math inline">\(\epsilon\)</span>-greedy and softmax action selection would not work, as all output neurons are useful.</p>
+<p>The most common solution is to use a stochastic <strong>Gaussian policy</strong>, based on the Gaussian distribution. In this case, the output of the actor is a mean vector <span class="math inline">\(\mu_\theta(s)\)</span> and a variance vector <span class="math inline">\(\sigma_\theta(s)\)</span>, providing the parameters of the normal distribution. The policy <span class="math inline">\(\pi_\theta(s, a) = \mathcal{N}(\mu_\theta(s), \sigma^2_\theta(s))\)</span> is then simply defined as:</p>
+<p><span class="math display">\[
+    \pi_\theta(s, a) = \frac{1}{\sqrt{2\pi\sigma^2_\theta(s)}} \, \exp -\frac{(a - \mu_\theta(s))^2}{2\sigma_\theta(s)^2}
+\]</span></p>
+<div id="fig-gaussianpolicy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gaussianpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="img/reparameterizationtrick.png" class="img-fluid figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gaussianpolicy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: Reparameterization trick to implement continuous stochastic Gaussian policies.
+</figcaption>
+</figure>
+</div>
+<p>In order to use backpropagation on the policy gradient (i.e.&nbsp;getting an analytical form of the score function <span class="math inline">\(\nabla_\theta \log \pi_\theta (s, a)\)</span>), one can use the <strong>reparameterization trick</strong> <span class="citation" data-cites="Heess2015">[@Heess2015]</span> by rewriting the policy as:</p>
+<p><span class="math display">\[
+    a = \mu_\theta(s) + \sigma_\theta(s) \times \xi \qquad \text{where} \qquad \xi \sim \mathcal{N}(0,1)
+\]</span></p>
+<p>To select an action, we only need to sample <span class="math inline">\(\xi\)</span> from the unit normal distribution, multiply it by the standard deviation and add the mean. To compute the score function, we use the following partial derivatives:</p>
+<p><span class="math display">\[
+    \nabla_\mu \log \pi_\theta (s, a) = \frac{a - \mu_\theta(s)}{\sigma_\theta(s)^2} \qquad \nabla_\sigma \log \pi_\theta (s, a) = \frac{(a - \mu_\theta(s))^2}{\sigma_\theta(s)^3} - \frac{1}{\sigma_\theta(s)}
+\]</span></p>
+<p>and use the chain rule to obtain the score function. The <strong>reparameterization trick</strong> is a cool trick to apply backpropagation on stochastic problems: it is for example used in the variational auto-encoders [VAE; <span class="citation" data-cites="Kingma2013">@Kingma2013</span>].</p>
+<p>Depending on the problem, one could use: 1) a fixed <span class="math inline">\(\sigma\)</span> for the whole action space, 2) a fixed <span class="math inline">\(\sigma\)</span> per DoF, 3) a learnable <span class="math inline">\(\sigma\)</span> per DoF (assuming all action dimensions to be mutually independent) or even 4) a covariance matrix <span class="math inline">\(\Sigma\)</span> when the action dimensions are dependent.</p>
+<p>One limitation of Gaussian policies is that their support is infinite: even with a small variance, samples actions can deviate a lot (albeit rarely) from the mean. This is particularly a problem when action must have a limited range: the torque of an effector, the linear or angular speed of a car, etc. Clipping the sampled action to minimal and maximal values introduces a bias which can impair learning. <span class="citation" data-cites="Chou2017">@Chou2017</span> proposed to use <strong>beta-distributions</strong> instead of Gaussian ones in the actor. Sampled values have a <span class="math inline">\([0,1]\)</span> support, which can rescaled to <span class="math inline">\([v_\text{min},v_\text{max}]\)</span> easily. They show that beta policies have less bias than Gaussian policies in most continuous problems.</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

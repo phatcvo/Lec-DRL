@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="2.4-ActorCritic_files/libs/clipboard/clipboard.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/tabby.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/popper.min.js"></script>
+<script src="2.4-ActorCritic_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="2.4-ActorCritic_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="2.4-ActorCritic_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="2.4-ActorCritic_files/libs/quarto-html/quarto-syntax-highlighting-234273d1456647dabc34a594ac50e507.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.32">
+
+  <title>actorcritic</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="2.4-ActorCritic_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="2.4-ActorCritic_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for citations */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+    }
+    .hanging-indent div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }  </style>
+  <link rel="stylesheet" href="2.4-ActorCritic_files/libs/revealjs/dist/theme/quarto-79bb9cdd6987010c0496b39192af70eb.css">
+  <script defer="" src="../assets/katex/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <link rel="stylesheet" href="../assets/katex/katex.min.css">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-chalkboard/font-awesome/css/all.css" rel="stylesheet">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-chalkboard/style.css" rel="stylesheet">
+  <link href="2.4-ActorCritic_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+
+<section id="distributed-rl" class="title-slide slide level1 center">
+<h1>1 - Distributed RL</h1>
+
+</section>
+
+<section id="advantage-actor-critic" class="title-slide slide level1 center">
+<h1>Advantage actor-critic</h1>
+<ul>
+<li>Let’s consider an <strong>n-step advantage actor-critic</strong>:</li>
+</ul>
+<p><span class="math display">
+A^n_t = R_t^n - V_\varphi (s_t) = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \,  V_\varphi(s_{t+n}) - V_\varphi (s_t)
+</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a2c.png" class="quarto-figure quarto-figure-center" style="width:70.0%"></p>
+</figure>
+</div>
+</section>
+
+<section id="advantage-actor-critic-1" class="title-slide slide level1 center">
+<h1>Advantage actor-critic</h1>
+<ul>
+<li><p>The advantage actor-critic is strictly <strong>on-policy</strong>:</p>
+<ul>
+<li><p>The critic <strong>must</strong> evaluate actions selected the current version of the actor <span class="math inline">\pi_\theta</span>, not an old version or another policy.</p></li>
+<li><p>The actor must learn from the current value function <span class="math inline">V^{\pi_\theta} \approx V_\varphi</span>.</p></li>
+</ul></li>
+</ul>
+<p><span class="math display">
+\begin{cases}
+    \nabla_\theta \mathcal{J}(\theta) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta (s_t, a_t) \, (R^n_t - V_\varphi(s_t)) ] \\
+    \\
+    \mathcal{L}(\varphi) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[(R^n_t - V_\varphi(s_t))^2] \\
+\end{cases}
+</span></p>
+<ul>
+<li>We cannot use an <strong>experience replay memory</strong> to deal with the correlated inputs, as it is only for off-policy methods.</li>
+</ul>
+</section>
+
+<section id="distributed-rl-1" class="title-slide slide level1 center">
+<h1>Distributed RL</h1>
+<ul>
+<li>We cannot get an uncorrelated batch of transitions by acting <strong>sequentially</strong> with a single agent.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/rl-sequence.png" class="quarto-figure quarto-figure-center" style="width:65.0%"></p>
+</figure>
+</div>
+<ul>
+<li>A simple solution is to have <strong>multiple actors</strong> with the same weights <span class="math inline">\theta</span> interacting <strong>in parallel</strong> with different copies of the environment.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a2c-arch.svg" style="width:70.0%"></p>
+<figcaption>Source: <a href="https://ray.readthedocs.io/en/latest/rllib.html" class="uri">https://ray.readthedocs.io/en/latest/rllib.html</a></figcaption>
+</figure>
+</div>
+<ul>
+<li><p>Each <strong>rollout worker</strong> (actor) starts an episode in a different state: at any point of time, the workers will be in <strong>uncorrelated states</strong>.</p></li>
+<li><p>From time to time, the workers all send their experienced transitions to the <strong>learner</strong> which updates the policy using a <strong>batch of uncorrelated transitions</strong>.</p></li>
+<li><p>After the update, the workers use the new policy.</p></li>
+</ul>
+</section>
+
+<section id="distributed-rl-2" class="title-slide slide level1 center">
+<h1>Distributed RL</h1>
+<p></p><div id="youtube-frame" style="position: relative; padding-bottom: 56.25%; /* 16:9 */ height: 0;"><iframe width="100%" height="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/iaF43Ze1oeI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div><p></p>
+</section>
+
+<section id="distributed-rl-3" class="title-slide slide level1 center">
+<h1>Distributed RL</h1>
+<ul>
+<li><p>Initialize global policy or value network <span class="math inline">\theta</span>.</p></li>
+<li><p>Initialize <span class="math inline">N</span> copies of the environment in different states.</p></li>
+<li><p><strong>while</strong> True:</p>
+<ul>
+<li><p><strong>for</strong> each worker in parallel:</p>
+<ul>
+<li>Copy the global network parameters <span class="math inline">\theta</span> to each worker:</li>
+</ul>
+<p><span class="math display">
+  \theta_k \leftarrow \theta
+  </span></p>
+<ul>
+<li><p>Initialize an empty transition buffer <span class="math inline">\mathcal{D}_k</span>.</p></li>
+<li><p>Perform <span class="math inline">d</span> steps with the worker on its copy of the environment.</p></li>
+<li><p>Append each transition <span class="math inline">(s, a, r, s')</span> to the transition buffer.</p></li>
+</ul></li>
+<li><p>join(): wait for each worker to terminate.</p></li>
+<li><p>Gather the <span class="math inline">N</span> transition buffers into a single buffer <span class="math inline">\mathcal{D}</span>.</p></li>
+<li><p>Update the global network on <span class="math inline">\mathcal{D}</span> to obtain new weights <span class="math inline">\theta</span>.</p></li>
+</ul></li>
+</ul>
+<!--
+# Distributed RL for value-based networks (DQN variants)
+
+* Distributed learning can be used for any deep RL algorithm, including DQN variants.
+
+* Distributed DQN variants include GORILA, IMPALA, APE-X, R2D2.
+
+* "All" you need is one (or more) GPU for training the global network and $N$ CPU cores for the workers.   
+
+* The workers fill the ERM much more quickly.
+
+![](img/ape-x.png){width=100%}
+
+::: footer
+@Horgan2018 Distributed Prioritized Experience Replay. arXiv:1803.00933.
+:::
+
+<!--
+# Distributed RL
+
+* In practice, managing the communication between the workers and the global network through processes can be quite painful.
+
+* There are some **frameworks** abstracting the dirty work, such as **RLlib**.
+
+![Source: <https://ray.readthedocs.io/en/latest/rllib.html>](img/rllib.svg)
+
+-->
+</section>
+
+<section id="a3c-asynchronous-advantage-actor-critic" class="title-slide slide level1 center">
+<h1>2 - A3C: Asynchronous advantage actor-critic</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/paper-a3c.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> Asynchronous Methods for Deep Reinforcement Learning. ICML. arXiv:1602.01783</p>
+</div>
+</section>
+
+<section id="a3c-asynchronous-advantage-actor-critic-1" class="title-slide slide level1 center">
+<h1>A3C: Asynchronous advantage actor-critic</h1>
+<ul>
+<li><p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> proposed the <strong>A3C</strong> algorithm (asynchronous advantage actor-critic).</p></li>
+<li><p>The stochastic policy <span class="math inline">\pi_\theta</span> is produced by the <strong>actor</strong> with weights <span class="math inline">\theta</span> and learned using :</p></li>
+</ul>
+<p><span class="math display">
+\nabla_\theta \mathcal{J}(\theta) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[\nabla_\theta \log \pi_\theta (s_t, a_t) \, (R^n_t - V_\varphi(s_t)) ]
+</span></p>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a2c.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<ul>
+<li>The value of a state <span class="math inline">V_\varphi(s)</span> is produced by the <strong>critic</strong> with weights <span class="math inline">\varphi</span>, which minimizes the mse with the <strong>n-step return</strong>:</li>
+</ul>
+<p><span class="math display">\mathcal{L}(\varphi) =  \mathbb{E}_{s_t \sim \rho_\theta, a_t \sim \pi_\theta}[(R^n_t - V_\varphi(s_t))^2]</span></p>
+<p><span class="math display">R^n_t =  \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n})</span></p>
+</div></div>
+<ul>
+<li><p>Both the actor and the critic are trained on batches of transitions collected using <strong>parallel workers</strong>.</p></li>
+<li><p>Two things are different from the general distributed approach: workers compute <strong>partial gradients</strong> and updates are <strong>asynchronous</strong>.</p></li>
+</ul>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> Asynchronous Methods for Deep Reinforcement Learning. ICML. arXiv:1602.01783</p>
+</div>
+</section>
+
+<section>
+<section id="a3c-asynchronous-advantage-actor-critic-2" class="title-slide slide level1 center">
+<h1>A3C: Asynchronous advantage actor-critic</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-parallel.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</section>
+<section class="slide level2">
+
+<ul>
+<li><p><strong>def</strong> worker(<span class="math inline">\theta</span>, <span class="math inline">\varphi</span>):</p>
+<ul>
+<li><p>Initialize empty transition buffer <span class="math inline">\mathcal{D}</span>. Initialize the environment to the <strong>last</strong> state visited by this worker.</p></li>
+<li><p><strong>for</strong> <span class="math inline">n</span> steps:</p>
+<ul>
+<li>Select an action using <span class="math inline">\pi_\theta</span>, store the transition in the transition buffer.</li>
+</ul></li>
+<li><p><strong>for</strong> each transition in <span class="math inline">\mathcal{D}</span>:</p>
+<ul>
+<li>Compute the <strong>n-step return</strong> in each state <span class="math inline">R^n_t =  \displaystyle\sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V_\varphi(s_{t+n})</span></li>
+</ul></li>
+<li><p>Compute <strong>policy gradient</strong> for the actor on the transition buffer: <span class="math display">d\theta = \nabla_\theta \mathcal{J}(\theta) = \frac{1}{n} \sum_{t=1}^n \nabla_\theta \log \pi_\theta (s_t, a_t) \, (R^n_t - V_\varphi(s_t))</span></p></li>
+<li><p>Compute <strong>value gradient</strong> for the critic on the transition buffer: <span class="math display">d\varphi = \nabla_\varphi \mathcal{L}(\varphi) = -\frac{1}{n} \sum_{t=1}^n (R^n_t - V_\varphi(s_t)) \, \nabla_\varphi V_\varphi(s_t)</span></p></li>
+<li><p><strong>return</strong> <span class="math inline">d\theta</span>, <span class="math inline">d\varphi</span></p></li>
+</ul></li>
+</ul>
+</section></section>
+<section id="a2c-global-networks" class="title-slide slide level1 center">
+<h1>A2C: global networks</h1>
+<ul>
+<li><p>Initialize actor <span class="math inline">\theta</span> and critic <span class="math inline">\varphi</span>.</p></li>
+<li><p>Initialize <span class="math inline">K</span> workers with a copy of the environment.</p></li>
+<li><p><strong>for</strong> <span class="math inline">t \in [0, T_\text{total}]</span>:</p>
+<ul>
+<li><p><strong>for</strong> <span class="math inline">K</span> workers <strong>in parallel</strong>:</p>
+<ul>
+<li><span class="math inline">d\theta_k</span>, <span class="math inline">d\varphi_k</span> = worker(<span class="math inline">\theta</span>, <span class="math inline">\varphi</span>)</li>
+</ul></li>
+<li><p>join()</p></li>
+<li><p>Merge all gradients:</p></li>
+</ul>
+<p><span class="math display">d\theta = \frac{1}{K} \sum_{i=1}^K d\theta_k \; ; \; d\varphi = \frac{1}{K} \sum_{i=1}^K d\varphi_k</span></p>
+<ul>
+<li>Update the actor and critic using gradient ascent/descent:</li>
+</ul>
+<p><span class="math display">\theta \leftarrow \theta + \eta \, d\theta \; ; \; \varphi \leftarrow \varphi - \eta \, d\varphi</span></p></li>
+</ul>
+</section>
+
+<section id="a3c-asynchronous-advantage-actor-critic-3" class="title-slide slide level1 center">
+<h1>A3C: Asynchronous advantage actor-critic</h1>
+<ul>
+<li><p>The previous slide depicts <strong>A2C</strong>, the synchronous version of A3C.</p></li>
+<li><p>A2C synchronizes the workers (threads), i.e.&nbsp;it waits for the <span class="math inline">K</span> workers to finish their job before merging the gradients and updating the global networks.</p></li>
+<li><p>A3C is <strong>asynchronous</strong>:</p>
+<ul>
+<li><p>the partial gradients are applied to the global networks <strong>as soon as</strong> they are available.</p></li>
+<li><p>No need to wait for all workers to finish their job.</p></li>
+</ul></li>
+<li><p>As the workers are not synchronized, this means that one worker could be copying the global networks <span class="math inline">\theta</span> and <span class="math inline">\varphi</span> <strong>while</strong> another worker is writing them.</p></li>
+<li><p>This is called a <strong>Hogwild!</strong> update: no locks, no semaphores. Many workers can read/write the same data.</p></li>
+<li><p>It turns out NN are robust enough for this kind of updates.</p></li>
+</ul>
+</section>
+
+<section id="a3c-asynchronous-updates" class="title-slide slide level1 center">
+<h1>A3C: asynchronous updates</h1>
+<ul>
+<li><p>Initialize actor <span class="math inline">\theta</span> and critic <span class="math inline">\varphi</span>.</p></li>
+<li><p>Initialize <span class="math inline">K</span> workers with a copy of the environment.</p></li>
+<li><p><strong>for</strong> <span class="math inline">K</span> workers <strong>in parallel</strong>:</p>
+<ul>
+<li><p><strong>for</strong> <span class="math inline">t \in [0, T_\text{total}]</span>:</p>
+<ul>
+<li><p>Copy the global networks <span class="math inline">\theta</span> and <span class="math inline">\varphi</span>.</p></li>
+<li><p>Compute partial gradients:</p></li>
+</ul>
+<p><span class="math display">d\theta_k, d\varphi_k = \text{worker}(\theta, \varphi)</span></p>
+<ul>
+<li>Update the <strong>global</strong> actor and critic using the <strong>partial gradients</strong>:</li>
+</ul>
+<p><span class="math display">\theta \leftarrow \theta + \eta \, d\theta_k</span></p>
+<p><span class="math display">\varphi \leftarrow \varphi - \eta \, d\varphi_k</span></p></li>
+</ul></li>
+</ul>
+</section>
+
+<section id="a3c-asynchronous-advantage-actor-critic-4" class="title-slide slide level1 center">
+<h1>A3C: Asynchronous advantage actor-critic</h1>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-parallel.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<ul>
+<li><p>A3C does not use an <em>experience replay memory</em>, but relies on <strong>multiple parallel workers</strong> to distribute learning.</p></li>
+<li><p>Each worker has a copy of the actor and critic networks, as well as an instance of the environment.</p></li>
+<li><p>Weight updates are synchronized regularly though a <strong>master network</strong> using Hogwild!-style updates (every <span class="math inline">n=5</span> steps!).</p></li>
+<li><p>Because the workers learn different parts of the state-action space, the weight updates are not very correlated.</p></li>
+</ul>
+</div></div>
+<ul>
+<li><p>It works best on shared-memory systems (multi-core) as communication costs between GPUs are huge.</p></li>
+<li><p>As an actor-critic method, it can deal with <strong>continuous action spaces</strong>.</p></li>
+</ul>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> Asynchronous Methods for Deep Reinforcement Learning. ICML. arXiv:1602.01783</p>
+</div>
+</section>
+
+<section id="a3c-results" class="title-slide slide level1 center">
+<h1>A3C : results</h1>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-comparison.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+<div class="columns">
+<div class="column" style="width:50%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-time.png" class="quarto-figure quarto-figure-center" style="width:80.0%"></p>
+</figure>
+</div>
+</div><div class="column" style="width:50%;">
+<ul>
+<li><p>A3C set a new record for Atari games in 2016.</p></li>
+<li><p>The main advantage is that the workers gather experience in parallel: training is much faster than with DQN.</p></li>
+<li><p>LSTMs can be used to improve the performance.</p></li>
+</ul>
+</div></div>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> Asynchronous Methods for Deep Reinforcement Learning. ICML. arXiv:1602.01783</p>
+</div>
+</section>
+
+<section id="a3c-results-1" class="title-slide slide level1 center">
+<h1>A3C : results</h1>
+<ul>
+<li>Learning is only marginally better with more threads:</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-threads1.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+<p>but much faster!</p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a3c-threads2.png" class="quarto-figure quarto-figure-center" style="width:100.0%"></p>
+</figure>
+</div>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2016">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2016</a>)</span> Asynchronous Methods for Deep Reinforcement Learning. ICML. arXiv:1602.01783</p>
+</div>
+</section>
+
+<section id="a3c-torcs-simulator" class="title-slide slide level1 center">
+<h1>A3C: TORCS simulator</h1>
+<p></p><div id="youtube-frame" style="position: relative; padding-bottom: 56.25%; /* 16:9 */ height: 0;"><iframe width="100%" height="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/0xo1Ldx3L5Q" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div><p></p>
+</section>
+
+<section id="a3c-labyrinth" class="title-slide slide level1 center">
+<h1>A3C: Labyrinth</h1>
+<p></p><div id="youtube-frame" style="position: relative; padding-bottom: 56.25%; /* 16:9 */ height: 0;"><iframe width="100%" height="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/nMR5mjCFZCw" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div><p></p>
+</section>
+
+<section id="a3c-continuous-control-problems" class="title-slide slide level1 center">
+<h1>A3C: continuous control problems</h1>
+<p></p><div id="youtube-frame" style="position: relative; padding-bottom: 56.25%; /* 16:9 */ height: 0;"><iframe width="100%" height="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/Ajjc08-iPx8" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen=""></iframe></div><p></p>
+</section>
+
+<section id="comparison-with-dqn" class="title-slide slide level1 center">
+<h1>Comparison with DQN</h1>
+<ul>
+<li>A3C came up in 2016. A lot of things happened since then…</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/rainbow-results1.png" class="quarto-figure quarto-figure-center" style="width:45.0%"></p>
+</figure>
+</div>
+<div class="footer">
+<p><span class="citation" data-cites="Hessel2017">Hessel et al. (<a href="#/references" role="doc-biblioref" onclick="">2017</a>)</span> Rainbow: Combining Improvements in Deep Reinforcement Learning. arXiv:1710.02298</p>
+</div>
+</section>
+
+<section id="actor-critic-neural-architectures" class="title-slide slide level1 center">
+<h1>3 - Actor-critic neural architectures</h1>
+
+</section>
+
+<section id="actor-critic-neural-architectures-1" class="title-slide slide level1 center">
+<h1>Actor-critic neural architectures</h1>
+<ul>
+<li>We have considered that actor-critic architectures consist of two separate neural networks, both taking the state <span class="math inline">s</span> (or observation <span class="math inline">o</span>) as an input.</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/a2c.png" class="quarto-figure quarto-figure-center" style="width:70.0%"></p>
+</figure>
+</div>
+<ul>
+<li><p>Each of these networks have their own loss function. They share nothing except the “data”.</p></li>
+<li><p>Is it really the best option?</p></li>
+</ul>
+</section>
+
+<section id="early-visual-features" class="title-slide slide level1 center">
+<h1>Early visual features</h1>
+<ul>
+<li><p>When working on images, the first few layers of the CNNs are likely to learn the same visual features (edges, contours).</p></li>
+<li><p>It would be more efficient to <strong>share</strong> some of the extracted features.</p></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/DeepQNetwork.jpg" class="quarto-figure quarto-figure-center" style="width:70.0%"></p>
+</figure>
+</div>
+<div class="footer">
+<p><span class="citation" data-cites="Mnih2013">Mnih et al. (<a href="#/references" role="doc-biblioref" onclick="">2013</a>)</span> Playing Atari with Deep Reinforcement Learning. <a href="http://arxiv.org/abs/1312.5602" class="uri">http://arxiv.org/abs/1312.5602</a></p>
+</div>
+</section>
+
+<section id="shared-architectures" class="title-slide slide level1 center">
+<h1>Shared architectures</h1>
+<ul>
+<li><p>Actor-critic architectures can share layers between the actor and the critic, sometimes up to the output layer.</p></li>
+<li><p>A compound loss sums the losses for the actor and the critic. Tensorflow/pytorch know which parameters influence which part of the loss.</p></li>
+</ul>
+<p><span class="math display">
+    \mathcal{L}(\theta) = \mathcal{L}_\text{actor}(\theta) + \mathcal{L}_\text{critic}(\theta)
+</span></p>
+<ul>
+<li><p>For pixel-based environments (Atari), the networks often share the convolutional layers.</p></li>
+<li><p>For continuous environments (Mujoco), separate networks sometimes work better than two-headed networks.</p></li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/shared_actorcritic.png" class="quarto-figure quarto-figure-center" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+
+<section id="continuous-stochastic-policies" class="title-slide slide level1 center">
+<h1>4 - Continuous stochastic policies</h1>
+
+</section>
+
+<section id="continuous-action-spaces" class="title-slide slide level1 center">
+<h1>Continuous action spaces</h1>
+<div class="columns">
+<div class="column" style="width:60%;">
+<ul>
+<li><p>One of the main advantages of actor-critic / PG methods over value-based methods is that they can deal with <strong>continuous action-spaces</strong>.</p></li>
+<li><p>Suppose that we want to control a robotic arm with <span class="math inline">n</span> degrees of freedom.</p></li>
+<li><p>An action <span class="math inline">\mathbf{a}</span> could be a vector of joint displacements:</p></li>
+</ul>
+<p><span class="math display">\mathbf{a} = \begin{bmatrix} \Delta \theta_1 &amp; \Delta \theta_2 &amp; \ldots \, \Delta \theta_n\end{bmatrix}^T</span></p>
+<ul>
+<li><p>The output layer of the policy network can very well represent this vector, but how would we implement <strong>exploration</strong>?</p></li>
+<li><p><span class="math inline">\epsilon</span>-greedy and softmax action selection would not work, as all neurons are useful.</p></li>
+<li><p>The most common solution is to use a stochastic <strong>Gaussian policy</strong>.</p></li>
+</ul>
+</div><div class="column" style="width:40%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/actionspace-robot.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/deepnetwork.svg" class="quarto-figure quarto-figure-center" style="width:80.0%"></p>
+</figure>
+</div>
+</div></div>
+</section>
+
+<section id="gaussian-policies" class="title-slide slide level1 center">
+<h1>Gaussian policies</h1>
+<ul>
+<li><p>A Gaussian policy considers the vector <span class="math inline">\mathbf{a}</span> to be sampled from the <strong>normal distribution</strong> <span class="math inline">\mathcal{N}(\mu_\theta(s), \sigma_\theta(s))</span>.</p></li>
+<li><p>The mean <span class="math inline">\mu_\theta(s)</span> and standard deviation <span class="math inline">\sigma_\theta(s)</span> are output vectors of the <strong>actor</strong> with parameters <span class="math inline">\theta</span>.</p></li>
+<li><p><strong>Sampling</strong> an action from the normal distribution is done through the <strong>reparameterization trick</strong>:</p></li>
+</ul>
+<p><span class="math display">\mathbf{a} = \mu_\theta(s) + \sigma_\theta(s) \, \xi</span></p>
+<p>where <span class="math inline">\xi \sim \mathcal{N}(0, I)</span> comes from the standard normal distribution.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/reparameterizationtrick.png" class="quarto-figure quarto-figure-center" style="width:70.0%"></p>
+</figure>
+</div>
+</section>
+
+<section id="gaussian-policies-1" class="title-slide slide level1 center">
+<h1>Gaussian policies</h1>
+<ul>
+<li>The good thing with the normal distribution is that we know its pdf:</li>
+</ul>
+<p><span class="math display">
+    \pi_\theta(s, a) = \frac{1}{\sqrt{2\pi\sigma^2_\theta(s)}} \, \exp -\frac{(a - \mu_\theta(s))^2}{2\sigma^2_\theta(s)}
+</span></p>
+<ul>
+<li>The log-likelihood <span class="math inline">\log \pi_\theta (s, a)</span> is a simple differentiable function of <span class="math inline">\mu_\theta(s)</span> and <span class="math inline">\sigma_\theta(s)</span>:</li>
+</ul>
+<p><span class="math display">
+\log \pi_\theta (s, a) = -\frac{(a - \mu_\theta(s))^2}{2\sigma^2_\theta(s)} - \frac{1}{2} \, \log 2\pi\sigma^2_\theta(s)
+</span></p>
+<p>so we can easily compute its gradient w.r.t <span class="math inline">\theta</span> and apply backpropagation:</p>
+<p><span class="math display">
+\begin{cases}
+    \nabla_{\mu_\theta(s)} \log \pi_\theta (s, a) = \dfrac{a - \mu_\theta(s)}{\sigma_\theta(s)^2} \\
+    \\
+    \nabla_{\sigma_\theta(s)} \log \pi_\theta (s, a) = \dfrac{(a - \mu_\theta(s))^2}{\sigma_\theta(s)^3} - \dfrac{1}{\sigma_\theta(s)}\\
+\end{cases}
+</span></p>
+</section>
+
+<section id="gaussian-policies-2" class="title-slide slide level1 center">
+<h1>Gaussian policies</h1>
+<ul>
+<li>A Gaussian policy samples actions from the <strong>normal distribution</strong> <span class="math inline">\mathcal{N}(\mu_\theta(s), \sigma_\theta(s))</span>, with <span class="math inline">\mu_\theta(s)</span> and <span class="math inline">\sigma_\theta(s)</span> being the output of the actor.</li>
+</ul>
+<p><span class="math display">\mathbf{a} = \mu_\theta(s) + \sigma_\theta(s) \, \xi</span></p>
+<ul>
+<li>The score <span class="math inline">\nabla_\theta \log \pi_\theta (s, a)</span> can be obtained easily using the output of the actor:</li>
+</ul>
+<div class="columns">
+<div class="column" style="width:60%;">
+<p><span class="math display">
+\begin{cases}
+    \nabla_{\mu_\theta(s)} \log \pi_\theta (s, a) = \dfrac{a - \mu_\theta(s)}{\sigma_\theta(s)^2} \\
+    \\
+    \nabla_{\sigma_\theta(s)} \log \pi_\theta (s, a) = \dfrac{(a - \mu_\theta(s))^2}{\sigma_\theta(s)^3} - \dfrac{1}{\sigma_\theta(s)}\\
+\end{cases}
+</span></p>
+</div><div class="column" style="width:40%;">
+<div class="quarto-figure quarto-figure-center">
+<figure>
+<p><img data-src="img/reparameterizationtrick.png" class="quarto-figure quarto-figure-center"></p>
+</figure>
+</div>
+</div></div>
+<ul>
+<li><p>The rest of the score (<span class="math inline">\nabla_\theta \mu_\theta(s)</span> and <span class="math inline">\nabla_\theta \sigma_\theta(s)</span>) is the problem of tensorflow/pytorch.</p></li>
+<li><p>This is the same <strong>reparametrization trick</strong> used in variational autoencoders to allow backpropagation to work through a sampling operation.</p></li>
+<li><p><strong>Beta</strong> distributions are an even better choice to parameterize stochastic policies <span class="citation" data-cites="Chou2017">(<a href="#/references" role="doc-biblioref" onclick="">Chou et al., 2017</a>)</span>.</p></li>
+</ul>
+<div class="footer">
+<p><span class="citation" data-cites="Chou2017">Chou et al. (<a href="#/references" role="doc-biblioref" onclick="">2017</a>)</span> Improving Stochastic Policy Gradients in Continuous Control with Deep Reinforcement Learning using the Beta Distribution. ICML.</p>
+</div>
+</section>
+
+<section id="references" class="title-slide slide level1 smaller scrollable">
+<h1>References</h1>
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-Chou2017" class="csl-entry" role="listitem">
+Chou, P.-W., Maturana, D., and Scherer, S. (2017). Improving <span>Stochastic Policy Gradients</span> in <span>Continuous Control</span> with <span>Deep Reinforcement Learning</span> using the <span>Beta Distribution</span>. in <em>International <span>Conference</span> on <span>Machine Learning</span></em> <a href="http://proceedings.mlr.press/v70/chou17a/chou17a.pdf">http://proceedings.mlr.press/v70/chou17a/chou17a.pdf</a>.
+</div>
+<div id="ref-Hessel2017" class="csl-entry" role="listitem">
+Hessel, M., Modayil, J., van Hasselt, H., Schaul, T., Ostrovski, G., Dabney, W., et al. (2017). Rainbow: <span>Combining Improvements</span> in <span>Deep Reinforcement Learning</span>. <a href="http://arxiv.org/abs/1710.02298">http://arxiv.org/abs/1710.02298</a>.
+</div>
+<div id="ref-Mnih2016" class="csl-entry" role="listitem">
+Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T. P., Harley, T., et al. (2016). Asynchronous <span>Methods</span> for <span>Deep Reinforcement Learning</span>. in <em>Proc. <span>ICML</span></em> <a href="http://arxiv.org/abs/1602.01783">http://arxiv.org/abs/1602.01783</a>.
+</div>
+<div id="ref-Mnih2013" class="csl-entry" role="listitem">
+Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., et al. (2013). Playing <span>Atari</span> with <span>Deep Reinforcement Learning</span>. <a href="http://arxiv.org/abs/1312.5602">http://arxiv.org/abs/1312.5602</a>.
+</div>
+</div>
+</section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/reveal-chalkboard/plugin.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="2.4-ActorCritic_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleChalkboard(event)\"><kbd>b</kbd> Toggle Chalkboard</a></li>\n<li class=\"slide-tool-item\" data-item=\"6\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleNotesCanvas(event)\"><kbd>c</kbd> Toggle Notes Canvas</a></li>\n<li class=\"slide-tool-item\" data-item=\"7\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.downloadDrawings(event)\"><kbd>d</kbd> Download Drawings</a></li>\n<li class=\"slide-tool-item\" data-item=\"8\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'chalkboard': {"buttons":false,"theme":"whiteboard"},
+'smaller': false,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1050,
+
+        height: 700,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 0.1,
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, RevealChalkboard, QuartoSupport,
+
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+            const codeEl = trigger.previousElementSibling.cloneNode(true);
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
+            }
+            return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>
