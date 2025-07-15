@@ -1,2 +1,17 @@
 .vscode
 /.quarto/
+
+# Build outputs - only keep the docs/ directory for GitHub Pages
+/posts/*.html
+/posts/*_files/
+/slides/*.html
+/slides/*_files/
+index.html
+index_files/
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.log
