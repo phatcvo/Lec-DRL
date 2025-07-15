@@ -1,12 +1,51 @@
 ---
-title: Deep Reinforcement Learning
+title: "Deep Reinforcement Learning"
+subtitle: "A Comprehensive Course on Modern Reinforcement Learning"
 echo: false
+toc-title: "Course Contents"
 ---
 
 
+::: {.hero-banner}
+# Welcome to Deep Reinforcement Learning
+
+This comprehensive course covers the fundamental concepts and cutting-edge techniques in Deep Reinforcement Learning (DRL). From basic tabular methods to advanced deep learning approaches, you'll explore the complete landscape of modern RL.
+
+::: {.btn-group}
+[Get Started](#lectures){.btn .btn-primary .btn-lg}
+[View Slides](slides/index.html){.btn .btn-outline-secondary .btn-lg}
+:::
+:::
+
+::: {.features}
+## Course Features
+
+::: {.feature-grid}
+::: {.feature-item}
+### 📚 Comprehensive Content
+Complete coverage from basic concepts to advanced deep RL techniques including DQN, Policy Gradients, Actor-Critic methods, and Model-based RL.
+:::
+
+::: {.feature-item}
+### 🎯 Practical Focus
+Each topic includes both theoretical foundations and practical implementations with real-world examples and applications.
+:::
+
+::: {.feature-item}
+### 📊 Interactive Materials
+Rich multimedia content with slides, detailed explanations, mathematical derivations, and visual illustrations.
+:::
+
+::: {.feature-item}
+### 🔄 Progressive Learning
+Structured curriculum that builds knowledge step-by-step from fundamental concepts to advanced research topics.
+:::
+:::
+:::
+
 ## Lectures
 
-#### 0 - Introduction
+#### 0 - Introduction {.lecture-section}
 
 
 ```{python}
@@ -40,7 +79,7 @@ table_lecture(lecs)
 ```
 
 
-#### 1 - Tabular RL
+#### 1 - Tabular RL {.lecture-section}
 
 ```{python} 
 lecs = {
@@ -61,7 +100,7 @@ table_lecture(lecs)
 ```
 
 
-#### 2 - Model-free RL
+#### 2 - Model-free RL {.lecture-section}
 
 
 ```{python} 
@@ -89,7 +128,7 @@ table_lecture(lecs)
 
 
 
-#### 3 - Model-based RL
+#### 3 - Model-based RL {.lecture-section}
 
 
 ```{python} 
@@ -110,7 +149,7 @@ table_lecture(lecs)
 
 
 
-#### 4 - Outlook
+#### 4 - Outlook {.lecture-section}
 
 
 ```{python} 
@@ -135,3 +174,7 @@ table_lecture(lecs)
 * Reinforcement Learning course by David Silver at UCL.
 
 <http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html>
+
+::: {.course-footer}
+© 2025 Deep Reinforcement Learning Course. This course material is designed to provide comprehensive coverage of modern reinforcement learning techniques.
+:::
