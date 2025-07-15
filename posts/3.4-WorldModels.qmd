@@ -1,698 +1,252 @@
----
-title: "World Models and Dreamer"
-subtitle: "Modern model-based algorithms"
-format:
-  html:
-    toc: true
-    toc-location: left
-    code-fold: false
-    link-external-newwindow: true
----
-
-# 1 - Model-based vs. Model-free
-
-# Model-based vs. Model-free
-
-* Model-free methods use the **reward prediction error** (RPE) to update values:
-
-$$
-    \delta_t = r_{t+1} + \gamma \, V^\pi(s_{t+1}) - V^\pi(s_t)
-$$
-
-$$
-    \Delta V^\pi(s_t) = \alpha \, \delta_t
-$$
-
-Encountered rewards propagate very slowly to all states and actions.
-
-![](img/gridworld-lambda.png){width=70%}
-
-* If the environment changes (transition probabilities, rewards), they have to relearn everything.
-
-* After training, selecting an action is very fast.
-
-# Model-based vs. Model-free
+# World models, Dreamer
 
 
-* Model-based RL can learn very fast changes in the transition or reward distributions:
+## World models
 
-$$
-    \Delta r(s_t, a_t, s_{t+1}) = \alpha \, (r_{t+1} - r(s_t, a_t, s_{t+1}))
-$$
+The core idea of **world models** [@Ha2018] is to explicitly separate the **world model** (what will happen next) from the **controller** (how to act).
+The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks. However, unsupervised data (without any label nor reward) is plenty and could be leveraged to learn useful representations.
+A huge **world model** can be efficiently trained by self-supervised / unsupervised methods, while a small **controller** should not need too many trials if its input representations are good.
 
-$$
-    \Delta p(s' | s_t, a_t) = \alpha \, (\mathbb{I}(s_{t+1} = s') - p(s' | s_t, a_t))
-$$
+@Ha2018 used the Vizdoom Take Cover environment (<http://vizdoom.cs.put.edu.pl/>) to demonstrate the power of world models, as well as a car racing environment.
 
-* But selecting an action requires planning in the tree of possibilities (slow).
+:::{.callout-tip}
+For a detailed explanation of world models, refer to:
 
-![](img/modelbased-tree.png){width=70%}
+<https://worldmodels.github.io/>
 
-# Model-based vs. Model-free
-
-* Relative advantages of MF and MB methods:
-
-<br>
-
----------------------------------------------------------------------
-              Inference  Sample          Optimality      Flexibility
-              speed      complexity
-------------- ---------- --------------- ------------    --------------
-Model-free    fast       high            yes             no
-
-Model-based   slow       low             as good as      yes
-                                         the model
----------------------------------------------------------------------
-
-<br>
-
-* A trade-off would be nice... Most MB models in the deep RL literature are hybrid MB/MF models anyway.
-
-# Outcome devaluation
-
-* Two forms of behavior are observed in the animal psychology literature:
-
-1. **Goal-directed** behavior learns Stimulus $\rightarrow$ Response $\rightarrow$ Outcome associations.
-
-2. **Habits** are developed by overtraining Stimulus $\rightarrow$ Response associations.
-
-* The main difference is that habits are not influenced by **outcome devaluation**, i.e. when rewards lose their value.
-
-![Source: Bernard W. Balleine](img/rewarddevaluation.jpg)
-
-
-
-# Goal-directed / habits = MB / MF ?
-
-* The classical theory assigns MF to habits and MB to goal-directed, mostly because their sensitivity to outcome devaluation.
-
-![](img/mfmb.png){width=80%}
-
-* The open question is the arbitration mechanism between these two segregated process: who takes control?
-
-* Recent work suggests both systems are largely overlapping.
-
-::: {.callout-tip}
-## References
-
-Doll, B. B., Simon, D. A., and Daw, N. D. (2012). The ubiquity of model-based reinforcement learning. Current Opinion in Neurobiology 22, 1075–1081. doi:10.1016/j.conb.2012.08.003.
-
-Miller, K., Ludvig, E. A., Pezzulo, G., and Shenhav, A. (2018). “Re-aligning models of habitual and goal-directed decision-making,” in Goal-Directed Decision Making : Computations and Neural Circuits, eds. A. Bornstein, R. W. Morris, and A. Shenhav (Academic Press)
+The videos embedded here come from this page.
 :::
 
+### Architecture
 
-# 2 - Successor representations
+The architecture of World Models is composed of three modules trained in succession:
 
-# Successor Representations (SR)
+1. The Vision module $V$,
+2. The Memory module $M$,
+3. The Controller module $C$.
 
-* Successor representations (SR) have been introduced to combine MF and MB properties. Let's split the definition of the value of a state:
+![Architecture of world models. Source: <https://worldmodels.github.io/>](img/wm-overview.svg){#fig-wmarchitecture}
 
-$$
-\begin{align}
-    V^\pi(s) &= \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, r_{t+k+1} | s_t =s] \\
-            &\\
-               &= \mathbb{E}_{\pi} [\begin{bmatrix} 1 \\ \gamma \\ \gamma^2 \\ \ldots \\ \gamma^\infty \end{bmatrix} \times
-                  \begin{bmatrix} \mathbb{I}(s_{t}) \\ \mathbb{I}(s_{t+1}) \\ \mathbb{I}(s_{t+2}) \\ \ldots \\ \mathbb{I}(s_{\infty}) \end{bmatrix}  \times
-                  \begin{bmatrix} r_{t+1} \\ r_{t+2} \\ r_{t+3} \\ \ldots \\ r_{t+\infty} \end{bmatrix} 
-                | s_t =s]\\
-\end{align}
-$$
+**Vision module**
 
-where $\mathbb{I}(s_{t})$ is 1 when the agent is in $s_t$ at time $t$, 0 otherwise.
+The vision module $V$ is the encoder of a **variational autoencoder** (VAE), trained on single frames of the game (obtained using a random policy).
+The resulting latent vector $\mathbf{z}_t$ contains a compressed representation of the frame $\mathbf{o}_t$.
 
-* The left part corresponds to the **transition dynamics**: which states will be visited by the policy, discounted by $\gamma$.
+![Vision module. Source: <https://worldmodels.github.io/>](img/wm-vae.svg){#fig-wmvision}
 
-* The right part corresponds to the **immediate reward** in each visited state.
+**Memory module**
 
-* Couldn't we learn the transition dynamics and the reward distribution separately in a model-free manner?
+The sequence of latent representations $\mathbf{z}_0, \ldots \mathbf{z}_t$ in a game is fed to a LSTM layer (RNN) together with the actions $a_t$ to compress what happens over time.
 
-# Successor Representations (SR)
+A **Mixture Density Network** (MDN, @Bishop1994) is used to predict the **distribution** of the next latent representations $P(\mathbf{z}_{t+1} | a_t, \mathbf{h}_t, \ldots \mathbf{z}_t)$. In short, MDN allows to perform probabilistic regression, but predicting both the mean and the variance of the data, instead of just its mean as in vanilla least sqaures regression. Most MDN methods use a mixture of Gaussian distributions to model the target distribution. 
 
-* SR rewrites the value of a state into an **expected discounted future state occupancy** $M^\pi(s, s')$ and an **expected immediate reward** $r(s')$ by summing over all possible states $s'$ of the MDP:
+![Memory module. Source: <https://worldmodels.github.io/>](img/wm-mdn_rnn.svg){#fig-wmmemory}
 
-$$
-\begin{align}
-    V^\pi(s) &= \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, r_{t+k+1} | s_t =s] \\
-            &\\
-               &= \sum_{s' \in \mathcal{S}} \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k}=s') \times r_{t+k+1}  | s_t =s]\\
-            &\\
-               &\approx \sum_{s' \in \mathcal{S}} \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k}=s')  | s_t =s] \times \mathbb{E} [r_{t+1}  | s_{t}=s']\\
-            &\\
-               &\approx \sum_{s' \in \mathcal{S}} M^\pi(s, s') \times r(s')\\
-\end{align}
-$$
+:::{.callout-tip icon="false"}
+## RNN-MDN
 
-::: footer
-@Dayan1993 Improving Generalization for Temporal Difference Learning: The Successor Representation. Neural Computation 5, 613–624. doi:10.1162/neco.1993.5.4.613.
+The RNN-MDN architecture has been used successfully in the past for sequence generation problems such as generating handwriting and sketches (Sketch-RNN, @Ha2017).
+
+Check a demo here: <https://magenta.tensorflow.org/sketch-rnn-demo>
+
+{{< video https://worldmodels.github.io/assets/mp4/sketch_rnn_insect.mp4 >}}
 :::
 
-# Successor Representations (SR)
+**Controller module**
 
-* The underlying assumption is that the world dynamics are independent from the reward function (which does not depend on the policy). 
+The last step is the **controller**. It takes a latent representation $\mathbf{z}_t$ and the current hidden state of the LSTM $\mathbf{h}_t$ as inputs and selects an action **linearly**:
 
-* This allows to re-use knowledge about world dynamics in other contexts (e.g. a new reward function in the same environment): **transfer learning**.
+$$a_t = \text{tanh}(W \, [\mathbf{z}_t, \mathbf{h}_t ] + b)$$
 
-![Source: <https://awjuliani.medium.com/the-present-in-terms-of-the-future-successor-representations-in-reinforcement-learning-316b78c5fa3>](img/sr-transferlearning.png)
+A RL actor cannot get simpler as that...
 
-* What matters is the states that you will visit and how interesting they are, not the order in which you visit them. 
+![Controller module. Source: <https://worldmodels.github.io/>](img/wm-schematic.svg){#fig-wmcontroller}
 
-* Knowing that being in the mensa will eventually get you some food is enough to know that being in the mensa is a good state: you do not need to remember which exact sequence of transitions will put food in your mouth.
-
-
-# Successor Representations (SR)
-
-* SR algorithms must estimate two quantities:
-
-    1. The **expected immediate reward** received after each state:
-
-    $$
-        r(s) = \mathbb{E} [r_{t+1} | s_t = s]
-    $$
-
-    2. The **expected discounted future state occupancy** (the **SR** itself):
-
-    $$
-        M^\pi(s, s') = \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_t = s]
-    $$
-
-* The value of a state $s$ is then computed with:
-
-$$
-    V^\pi(s) = \sum_{s' \in \mathcal{S}} M(s, s') \times r(s')
-$$
-
-what allows to infer the policy (e.g. using an actor-critic architecture).
-
-* The immediate reward for a state can be estimated very quickly and flexibly after receiving each reward:
-
-$$
-    \Delta \, r(s_t) = \alpha \, (r_{t+1} - r(s_t))
-$$
+The controller is not even trained with RL: it uses a genetic algorithm, the Covariance-Matrix Adaptation Evolution Strategy (CMA-ES, @Hansen2001), to find the output weights that maximize the returns.
+The world model is trained by classical self-supervised learning using a random agent before learning, while the controller is simply evolved using a black-box optimizer. 
 
 
+::: {.callout-note icon="false"}
+## World models
 
-# SR and transition matrix
+**Algorithm:**
 
-* Imagine a very simple MDP with 4 states and a single deterministic action:
+1. Collect 10,000 rollouts from a random policy.
 
-![](img/sr-simplemdp.svg){width=40%}
+2. Train VAE (V) to encode each frame into a latent vector $\mathbf{z} \in \mathcal{R}^{32}$.
 
-* The transition matrix $\mathcal{P}^\pi$ depicts the possible $(s, s')$ transitions:
+3. Train MDN-RNN (M) to model $P(\mathbf{z}_{t+1} | a_t, \mathbf{h}_t, \ldots \mathbf{z}_t)$.
 
-$$
-\mathcal{P}^\pi = \begin{bmatrix}
-0 & 1 & 0 & 0 \\
-0 & 0 & 1 & 0 \\
-0 & 0 & 0 & 1 \\
-0 & 0 & 0 & 1 \\
-\end{bmatrix}
-$$
-
-
-* The SR matrix $M$ also represents the future transitions discounted by $\gamma$:
-
-$$
-M = \begin{bmatrix}
-1 & \gamma & \gamma^2 & \gamma^3 \\
-0 & 1 & \gamma & \gamma^2 \\
-0 & 0 & 1  & \gamma\\
-0 & 0 & 0 & 1 \\
-\end{bmatrix}
-$$
-
-# SR matrix in a Tolman's maze
-
-::: {.columns}
-::: {.column width=50%}
-
-
-![](img/sr-tolman.png)
-
-:::
-::: {.column width=50%}
-
-
-* The SR represents whether a state can be reached soon from the current state (b) using the current policy.
-
-* The SR depends on the policy:
-
-    * A random agent will map the local neighborhood (c).
-
-    * A goal-directed agent will have SR representations that follow the optimal path (d).
-
-* It is therefore different from the transition matrix, as it depends on behavior and rewards.
-
-* The exact dynamics are lost compared to MB: it only represents whether a state is reachable, not how.
-
-:::
+4. Evolve Controller (C) to maximize the expected cumulative reward of a rollout.
 :::
 
+For the car racing environment, the repartition of the number of weights clearly shows that the complexity of the model lies in the world model, not the controller:
 
-::: footer
-@Russek2017 Predictive representations can link model-based reinforcement learning to model-free mechanisms. PLOS Computational Biology.
-:::
+**Parameters for car racing:**
 
-# Example of a SR matrix
+Model       Parameter Count
+------      ------------------
+VAE         4,348,547
+MDN-RNN     422,368
+Controller  867
 
-* The SR matrix reflects the proximity between states depending on the transitions and the policy. it does not have to be a spatial relationship.
+### Results
 
-::: {.columns}
-::: {.column width=50%}
+Performance in car racing:
 
+{{< video https://worldmodels.github.io/assets/mp4/carracing_mistake_short.mp4 
+    title="World-models - Performance"
+    aspect-ratio="16x9" 
+>}}
 
-![](img/schapiro1.png)
+Below is the input of the VAE and the reconstruction.
+The reconstruction does not have to be perfect as long as the latent space is informative.
 
-:::
-::: {.column width=50%}
 
+{{< video https://worldmodels.github.io/assets/mp4/carracing_vae_compare.mp4 
+    title="World-models - VAE"
+    aspect-ratio="16x9" 
+>}}
 
-![](img/schapiro2.png)
+Having access to a full rollout of the future leads to more stable driving:
 
-:::
-:::
+![Performance of World models on the car racing environemnt. Source: <https://worldmodels.github.io/>](img/wm-results.png){#fig-wmresults}
 
 
-::: footer
-@Stachenfeld2017 The hippocampus as a predictive map. Nature Neuroscience 20, 1643–1653. doi:10.1038/nn.4650
-:::
+In summary, the **world model** V+M is learned **offline** with a random agent, using self-supervised learning, while the **controller** C has few weights (1000) and can be trained by evolutionary algorithms, not even RL.
+The network can even learn by playing entirely in its **own imagination**, as the world model can be applied on itself and predict all future frames. It just needs to additionally predict the reward. After that, the learned policy can be transferred to the real environment. 
 
 
-# Learning the SR
 
-* How can we learn the SR matrix for all pairs of states?
+## Deep Planning Network - PlaNet
 
-$$
-    M^\pi(s, s') = \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_t = s]
-$$
 
-* We first notice that the SR obeys a recursive Bellman-like equation:
+PlaNet [@Hafner2019] extends the idea of World models by learning the model together with the policy (**end-to-end**).
+It learns a **latent dynamics model** that takes the past observations $o_t$ into account (needed for POMDPs):
 
-$$\begin{aligned}
-    M^\pi(s, s') &= \mathbb{I}(s_{t} = s') + \mathbb{E}_{\pi} [\sum_{k=1}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_t = s] \\
-            &= \mathbb{I}(s_{t} = s') + \gamma \, \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k+1} = s') | s_t = s] \\
-            &= \mathbb{I}(s_{t} = s') + \gamma \, \mathbb{E}_{s_{t+1} \sim \mathcal{P}^\pi(s' | s)} [\mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_{t+1} = s] ]\\
-            &= \mathbb{I}(s_{t} = s') + \gamma \, \mathbb{E}_{s_{t+1} \sim \mathcal{P}^\pi(s' | s)} [M^\pi(s_{t+1}, s')]\\
-\end{aligned}
-$$
+$$s_{t}, r_{t+1}, \hat{o}_t = f(o_t, a_t, s_{t-1})$$
 
-* This is reminiscent of TDM: the remaining distance to the goal is 0 if I am already at the goal, or gamma the distance from the next state to the goal.
+and plans in the latent space using multiple rollouts:
 
+$$a_t = \text{arg}\max_a \mathbb{E}[R(s_t, a, s_{t+1}, \ldots)]$$
 
-# Model-based SR
+**Training**
 
-* Bellman-like SR:
+![Latent dynamics model of PlaNet. Source: <https://planetrl.github.io/>](img/planet-model.png){#fig-planet}
 
-$$M^\pi(s, s') = \mathbb{I}(s_{t} = s') + \gamma \, \mathbb{E}_{s_{t+1} \sim \mathcal{P}^\pi(s' | s)} [M^\pi(s_{t+1}, s')]$$
+The latent dynamics model is a sequential variational autoencoder learning concurrently:
 
 
-* If we know the transition matrix for a fixed policy $\pi$: 
+1. An **encoder** from the observation $o_t$ to the latent space $s_t$.
 
-$$\mathcal{P}^\pi(s, s') = \sum_a \pi(s, a) \, p(s' | s, a)$$
+$$q(s_t | o_t)$$
 
-we can obtain the SR directly with matrix inversion as we did in **dynamic programming**:
+2. A **decoder** from the latent space to the reconstructed observation $\hat{o}_t$.
 
-$$
-    M^\pi = I + \gamma \, \mathcal{P}^\pi \times M^\pi
-$$
+$$p(\hat{o}_t | s_t)$$
 
-so that:
 
-$$
-    M^\pi = (I - \gamma \, \mathcal{P}^\pi)^{-1}
-$$
+3. A **transition model** to predict the next latent representation given an action.
 
-* This DP approach is called **model-based SR** (MB-SR) as it necessitates to know the environment dynamics.
+$$p(s_{t+1} | s_t, a_t)$$
 
-<br>
+4. A **reward model** predicting the immediate reward.
 
-::: footer
-@Momennejad2017 The successor representation in human reinforcement learning. Nature Human Behaviour 1, 680–692. doi:10.1038/s41562-017-0180-8.
-:::
+$$p(r_t | s_t)$$
 
-# Model-free SR
 
-* If we do not know the transition probabilities, we simply sample a single $s_t, s_{t+1}$ transition:
+Training sequences $(o_1, a_1, o_2, \ldots, o_T)$ can be generated **off-policy** (e.g. from demonstrations) or on-policy. 
+The loss function to train this **recurrent state-space model** (RSSM), which has a stochastic component in the encoder (VAE), and has to compensate for latent overshooting (i.e. to enforce consistency between one-step and multi-step predictions in the latent space), is slightly complicated and is not explained here. 
 
-$$
-    M^\pi(s_t, s') \approx \mathbb{I}(s_{t} = s') + \gamma \, M^\pi(s_{t+1}, s')
-$$
+![Training the latent dynamics model of PlaNet. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-model.gif){#fig-planet-training}
 
-* We can define a **sensory prediction error** (SPE):
+**Inference**
 
-$$
-    \delta^\text{SR}_t = \mathbb{I}(s_{t} = s') + \gamma \, M^\pi(s_{t+1}, s') - M(s_t, s')
-$$
+From a single observation $o_t$ encoded into $s_t$, we can generate 10000 rollouts using **random sampling**. In these rollouts, the action sequences are varied randomly, generating as many random sequences as needed. The return of each rollout can be estimated using the reward model.
+A belief over the action sequences is updated using the **cross-entropy method** (CEM, @Szita2006) in order to restrict the search.
 
-that is used to update an estimate of the SR:
+After the 10000 rollouts are executed (in imagination), the sequence with the highest return is selected and its first action is executed. 
+At the next time step, planning starts from scratch: this is the key idea of Model Predictive Control.
+There is no actor in PlaNet, only a transition model used for planning. The reason PlaNet works is that planning is done in the latent space, hich has a much lower dimensionality than the observations (e.g. images). 
 
-$$
-    \Delta M^\pi(s_t, s') = \alpha \, \delta^\text{SR}_t
-$$
 
-* This is **SR-TD**, using a SPE instead of RPE, which learns only from transitions but ignores rewards.
+![Source: <https://ai.googleblog.com/2019/02/introducing-planet-deep-planning.html>](img/planet-planning.png)
 
+**Results**
 
-::: footer
-@Momennejad2017 The successor representation in human reinforcement learning. Nature Human Behaviour 1, 680–692. doi:10.1038/s41562-017-0180-8.
-:::
+Planet learns continuous Mujoco image-based control problems in 2000 episodes, where D4PG needs 50 times more.
 
-# The sensory prediction error - SPE
+{{< video https://www.youtube.com/embed/tZk1eof_VNA
+    title="PlaNet"
+    aspect-ratio="16x9" 
+>}}
 
-* The SPE has to be applied on ALL successor states $s'$ after a transition $(s_t, s_{t+1})$:
+The latent dynamics model can learn 6 control tasks **at the same time**.
+As there is no actor, but only a planner, the same network can control all agents!
 
-$$
-    M^\pi(s_t, \mathbf{s'}) = M^\pi(s_t, \mathbf{s'}) + \alpha \, (\mathbb{I}(s_{t}=\mathbf{s'}) + \gamma \, M^\pi(s_{t+1}, \mathbf{s'}) - M(s_t, \mathbf{s'}))
-$$
+![Top row: agent behavior on the 6 Mujoco tasks. Bottom row: predcited frames by the agent. Source: <https://ai.googleblog.com/2019/02/introducing-planet-deep-planning.html>](img/planet-results.gif){#fig-planetresults}
 
-* Contrary to the RPE, the SPE is a **vector** of prediction errors, used to update one row of the SR matrix.
 
-* The SPE tells how **surprising** a transition $s_t \rightarrow s_{t+1}$ is for the SR.
+## Dreamer
 
-![](img/schapiro2.png){width=40%}
+Dreamer [@Hafner2020] extends the idea of PlaNet by additionally **training an actor** instead of using a MPC planner.
+The latent dynamics model is the same RSSM architecture.
+Training a "model-free" actor on imaginary rollouts instead of MPC planning should reduce the computational cost at inference time.
 
-::: footer
-@Stachenfeld2017 The hippocampus as a predictive map. Nature Neuroscience 20, 1643–1653. doi:10.1038/nn.4650
-:::
+![Dreamer first learns the World model (RSSM), then trains a model-free agent in its imagination to maximize the rewards, before being used to interact with the environment. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-principle.png){#fig-dreamer-principle}
 
-# Successor representations
+The latent dynamics model is the same as in PlaNet, learning from past experiences. 
 
+![Latent dynamics model of Dreamer, exactly the same as PlaNet. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-model.gif){#fig-dreamer-rssm}
 
-* The SR matrix represents the **expected discounted future state occupancy**:
 
-$$M^\pi(s, s') = \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_t = s]$$
+The behavior module learns to predict the value of a state $V_\varphi(s)$ and the policy $\pi_\theta(s)$ (actor-critic).
+It is trained **in imagination** in the latent space using the reward model for the immediate rewards (to compute returns) and the transition model for the next states.
 
-* It can be learned using a TD-like SPE from single transitions:
 
-$$
-    M^\pi(s_t, \mathbf{s'}) = M^\pi(s_t, \mathbf{s'}) + \alpha \, (\mathbb{I}(s_{t}=\mathbf{s'}) + \gamma \, M^\pi(s_{t+1}, \mathbf{s'}) - M(s_t, \mathbf{s'}))
-$$
+![The actor-critic agent is trained in imagination using rollouts generated by the RSSM model. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-actor.gif){#fig-dreamer-mf}
 
 
-* The immediate reward in each state can be learned **independently from the policy**:
+The current observation $o_t$ is encoded into a state $s_t$, the actor selects an action $a_t$, the transition model predicts $s_{t+1}$, the reward model predicts $r_{t+1}$, the critic predicts $V_\varphi(s_t)$.
+At the end of the sequence, we apply **backpropagation-through-time** to train the actor and the critic.
 
-$$
-    \Delta \, r(s_t) = \alpha \, (r_{t+1} - r(s_t))
-$$
+The **critic** $V_\varphi(s_t)$ is trained on the imaginary sequence $(s_t, a_t, r_{t+1}, s_{t+1}, \ldots, s_T)$ to minimize the prediction error with the $\lambda$-return:
 
-* The value $V^\pi(s)$ of a state is obtained by summing of all successor states:
+$$R^\lambda_t = (1  - \lambda) \, \sum_{n=1}^{T-t-1} \lambda^{n-1} \, R^n_t + \lambda^{T-t-1} \, R_t$$
 
-$$
-    V^\pi(s) = \sum_{s' \in \mathcal{S}} M(s, s') \times r(s')
-$$
+The **actor** $\pi_\theta(s_t, a_t)$ is trained on the sequence to maximize the sum of the value of the future states:
 
-* This critic can be used to train an **actor** $\pi_\theta$ using regular TD learning (e.g. A3C).
+$$\mathcal{J}(\theta) = \mathbb{E}_{s_t, a_t \sim \pi_\theta} [\sum_{t'=t}^T V_\varphi(s_{t'})]$$
 
+The main advantage of training an actor is that we need only one rollout when training it: backpropagation maximizes the expected returns.
+When acting, we just need to encode the history of the episode in the latent space, and the actor becomes model-free!
 
-::: footer
-@Stachenfeld2017 The hippocampus as a predictive map. Nature Neuroscience 20, 1643–1653. doi:10.1038/nn.4650
-:::
+![Complete Dreamer architecture. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-architecture.png){#fig-dreamer-arch}
 
 
-# Successor representation of actions
+Dreamer beats model-free and model-based methods on 20 continuous control tasks.
 
-* Note that it is straightforward to extend the idea of SR to state-action pairs:
+![](img/dreamer-results.gif)
 
+![Results of Dreamer on various Mujoco tasks, compared to SotA control methods. Source: <https://ai.googleblog.com/2020/03/introducing-dreamer-scalable.html>](img/dreamer-results.png){#fig-dreamer-results}
 
-$$M^\pi(s, a, s') = \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(s_{t+k} = s') | s_t = s, a_t = a]$$
 
-allowing to estimate Q-values:
+It also learns Atari and Deepmind lab video games, sometimes on par with Rainbow or IMPALA!
 
-$$
-    Q^\pi(s, a) = \sum_{s' \in \mathcal{S}} M(s, a, s') \times r(s')
-$$
 
-using SARSA or Q-learning-like SPEs:
+![](img/dreamer-resultsatari.gif)
 
-$$
-    \delta^\text{SR}_t = \mathbb{I}(s_{t} = s') + \gamma \, M^\pi(s_{t+1}, a_{t+1}, s') - M(s_t, a_{t}, s')
-$$
 
-depending on the choice of the next action $a_{t+1}$ (on- or off-policy).
+![Results of Dreamer on Atari gameSource: <https://dreamrl.github.io/>](img/dreamer-resultsatari.png){#fig-dreamer-atari}
 
-::: footer
-@Russek2017 Predictive representations can link model-based reinforcement learning to model-free mechanisms. PLoS Computational Biology. doi:10.1371/journal.pcbi.1005768
-:::
 
-# 3 - Successor features
+A recent extension of Dreamer, DayDreamer [@Wu2022], allows physical robots to learn complex tasks in a few hours.
 
-# Successor features
 
-::: {.columns}
-::: {.column width=60%}
+![DayDreamer. Source: @Wu2022 and <https://danijar.com/daydreamer>](img/daydreamer.png)
 
-* The SR matrix associates each state to all others ($N\times N$ matrix): 
 
-    * curse of dimensionality.
-    
-    * only possible for discrete state spaces.
-
-* A better idea is to describe each state $s$ by a feature vector $\phi(s) = [\phi_i(s)]_{i=1}^d$ with less dimensions than the number of states.
-
-* This feature vector can be constructed (see the lecture on function approximation) or learned by an autoencoder (latent representation).
-
-:::
-::: {.column width=40%}
-
-
-![](img/schapiro2.png)
-
-:::
-:::
-
-
-
-![Source: <http://www.jessicayung.com/the-successor-representation-1-generalising-between-states/>](img/SRfeatures.png){width=60%}
-
-
-::: footer
-@Stachenfeld2017 The hippocampus as a predictive map. Nature Neuroscience 20, 1643–1653. doi:10.1038/nn.4650
-:::
-
-
-
-
-# Successor features
-
-* The **successor feature representation** (SFR) represents the discounted probability of observing a feature $\phi_j$ after being in s.
-
-![Source: <http://www.jessicayung.com/the-successor-representation-1-generalising-between-states/>](img/SRfeatures.png){width=60%}
-
-* Instead of predicting when the agent will see a cat after being in the current state $s$, the SFR predicts when it will see eyes, ears or whiskers independently:
-
-$$
-    M^\pi_j(s) = M^\pi(s, \phi_j) = \mathbb{E}_{\pi} [\sum_{k=0}^\infty \gamma^k \, \mathbb{I}(\phi_j(s_{t+k})) | s_t = s, a_t = a]
-$$
-
-* Linear SFR (Gehring, 2015) supposes that it can be linearly approximated from the features of the current state:
-
-$$
-    M^\pi_j(s) = M^\pi(s, \phi_j) = \sum_{i=1}^d m_{i, j} \, \phi_i(s)
-$$
-
-::: footer
-@Gehring2015 Approximate Linear Successor Representation. Presented at the The multi-disciplinary conference on Reinforcement Learning and Decision Making (RLDM).
-:::
-
-# Successor features
-
-
-* The value of a state is now defined as the sum over successor features of their immediate reward discounted by the SFR:
-
-$$
-    V^\pi(s) = \sum_{j=1}^d M^\pi_j(s) \, r(\phi_j) = \sum_{j=1}^d r(\phi_j) \, \sum_{i=1}^d m_{i, j} \, \phi_i(s)
-$$
-
-* The SFR matrix $M^\pi = [m_{i, j}]_{i, j}$ associates each feature $\phi_i$ of the current state to all successor features $\phi_j$.
-
-    * Knowing that I see a kitchen door in the current state, how likely will I see a food outcome in the near future?
-
-* Each successor feature $\phi_j$ is associated to an expected immediate reward $r(\phi_j)$.
-
-    * A good state is a state where food features (high $r(\phi_j)$) are likely to happen soon (high $m_{i, j}$).
-
-* In matrix-vector form:
-
-$$
-    V^\pi(s) = \mathbf{r}^T \times M^\pi \times \phi(s)
-$$
-
-::: footer
-@Gehring2015 Approximate Linear Successor Representation. Presented at the The multi-disciplinary conference on Reinforcement Learning and Decision Making (RLDM).
-:::
-
-# Successor features
-
-* Value of a state:
-
-$$
-    V^\pi(s) = \mathbf{r}^T \times M^\pi \times \phi(s)
-$$
-
-
-* The reward vector $\mathbf{r}$ only depends on the features and can be learned independently from the policy, but can be made context-dependent:
-
-    * Food features can be made more important when the agent is hungry, less when thirsty.
-
-* **Transfer learning** becomes possible in the same environment:
-
-    * Different goals (searching for food or water, going to place A or B) only require different reward vectors.
-
-    * The dynamics of the environment are stored in the SFR.
-
-![Source: <https://awjuliani.medium.com/the-present-in-terms-of-the-future-successor-representations-in-reinforcement-learning-316b78c5fa3>](img/sr-transferlearning.png){width=60%}
-
-
-::: footer
-@Gehring2015 Approximate Linear Successor Representation. Presented at the The multi-disciplinary conference on Reinforcement Learning and Decision Making (RLDM).
-:::
-
-# Successor features
-
-* How can we learn the SFR matrix $M^\pi$?
-
-$$
-    V^\pi(s) = \mathbf{r}^T \times M^\pi \times \phi(s)
-$$
-
-* We only need to use the sensory prediction error for a transition between the feature vectors $\phi(s_t)$ and $\phi(s_{t+1})$:
-
-$$\delta_t^\text{SFR} = \phi(s_t) + \gamma \, M^\pi \times \phi(s_{t+1}) - M^\pi \times \phi(s_t)$$
-
-and use it to update the whole matrix:
-
-
-$$\Delta M^\pi = \delta_t^\text{SFR} \times \phi(s_t)^T$$
-
-
-* However, this linear approximation scheme only works for **fixed** feature representation $\phi(s)$. We need to go deeper...
-
-
-::: footer
-@Gehring2015 Approximate Linear Successor Representation. Presented at the The multi-disciplinary conference on Reinforcement Learning and Decision Making (RLDM).
-:::
-
-# 4 - Deep Successor Reinforcement Learning
-
-![](img/paper-deepSR.png)
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-# Deep Successor Reinforcement Learning
-
-![](img/DSR.png){width=90%}
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-
-
-# Deep Successor Reinforcement Learning
-
-* Each state $s_t$ is represented by a D-dimensional (D=512) vector $\phi(s_t) = f_\theta(s_t)$ which is the output of an encoder.
-
-* A decoder $g_{\hat{\theta}}$ is used to provide a reconstruction loss, so $\phi(s_t)$ is a latent representation of an autoencoder:
-
-$$\mathcal{L}_\text{reconstruction}(\theta, \hat{\theta}) = \mathbb{E}[(g_{\hat{\theta}}(\phi(s_t)) - s_t)^2]$$
-
-* The immediate reward $R(s_t)$ is linearly predicted from the feature vector $\phi(s_t)$ using a reward vector $\mathbf{w}$.
-
-$$R(s_t) = \phi(s_t)^T \times \mathbf{w}$$
-
-$$\mathcal{L}_\text{reward}(\mathbf{w}, \theta) = \mathbb{E}[(r_{t+1} - \phi(s_t)^T \times \mathbf{w})^2]$$ 
-
-* The reconstruction loss is important, otherwise the latent representation $\phi(s_t)$ would be too reward-oriented and would not generalize.
-
-* The reward function is learned on a single task, but it can fine-tuned on another task, with all other weights frozen.
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-# Deep Successor Reinforcement Learning
-
-* For each action $a$, a NN $u_\alpha$ predicts the future feature occupancy $M(s, s', a)$ for the current state: 
-
-$$m_{s_t a} = u_\alpha(s_t, a)$$
-
-* The Q-value of an action is simply the dot product between the SR of an action and the reward vector $\mathbf{w}$:
-
-$$Q(s_t, a) = \mathbf{w}^T \times m_{s_t a} $$
-
-* The selected action is $\epsilon$-greedily selected around the greedy action:
-
-$$a_t = \text{arg}\max_a Q(s_t, a)$$
-
-* The SR of each action is learned using the Q-learning-like SPE (with fixed $\theta$ and a target network $u_{\alpha'}$):
-
-$$\mathcal{L}^\text{SPE}(\alpha) = \mathbb{E}[\sum_a (\phi(s_t) + \gamma \, \max_{a'} u_{\alpha'}(s_{t+1}, a') - u_\alpha(s_t, a))^2]$$
-
-* The compound loss is used to train the complete network end-to-end **off-policy** using a replay buffer (DQN-like).
-
-$$\mathcal{L}(\theta, \hat{\theta}, \mathbf{w}, \alpha) = \mathcal{L}_\text{reconstruction}(\theta, \hat{\theta}) + \mathcal{L}_\text{reward}(\mathbf{w}, \theta) + \mathcal{L}^\text{SPE}(\alpha)$$
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-# Deep Successor Reinforcement Learning
-
-![](img/DSR-algorithm.png){width=90%}
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-# Deep Successor Reinforcement Learning
-
-![](img/DSR-results.png){width=75%}
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-
-# Deep Successor Reinforcement Learning
-
-::: {.columns}
-::: {.column width=50%}
-
-
-* The interesting property is that you do not need rewards to learn:
-
-    * A random agent can be used to learn the encoder and the SR, but $\mathbf{w}$ can be left untouched.
-
-    * When rewards are introduced (or changed), only $\mathbf{w}$ has to be adapted, while DQN would have to re-learn all Q-values.
-
-
-:::
-::: {.column width=50%}
-
-
-![](img/DSR-results2.png)
-
-:::
-:::
-
-
-* This is the principle of **latent learning** in animal psychology: fooling around in an environment without a goal allows to learn the structure of the world, what can speed up learning when a task is introduced.
-
-* The SR is a **cognitive map** of the environment: learning task-unspecific relationships.
-
-::: footer
-@Kulkarni2016 Deep Successor Reinforcement Learning. arXiv:1606.02396
-:::
-
-# Visual Semantic Planning using Deep Successor Representations
-
-{{< youtube _2pYVw6ATKo >}}
-
-
-::: footer
-@Zhu2017 Visual Semantic Planning using Deep Successor Representations. arXiv:170508080
-:::
-
-
-# References
+{{< video https://www.youtube.com/embed/xAXvfVTgqr0
+    title="DayDreamer"
+    aspect-ratio="16x9" 
+>}}

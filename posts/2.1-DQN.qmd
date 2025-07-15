@@ -1,285 +1,136 @@
----
-title: "Deep Q-Network (DQN)"
-subtitle: "First successful application of deep networks to RL"
-format:
-  html:
-    toc: true
-    toc-location: left
-    code-fold: false
-    link-external-newwindow: true
----
 
-# Value-based deep RL
+# Deep Q-network (DQN)
 
-![](img/valuebased-agent.png){width=55%}
+## Limitations of deep neural networks for function approximation
 
-* The basic idea in **value-based deep RL** is to approximate the Q-values in each possible state, using a **deep neural network** with free parameters $\theta$:
+The goal of value-based deep RL is to approximate the Q-value of each possible state-action pair using a deep neural network. As shown on @fig-functionapprox, the network can either take a state-action pair as input and return a single output value, or take only the state as input and return the Q-value of all possible actions (only possible if the action space is discrete). In both cases, the goal is to learn estimates $Q_\theta(s, a)$ with a NN with parameters $\theta$.
 
-$$Q_\theta(s, a) \approx Q^\pi(s, a) = \mathbb{E}_\pi (R_t | s_t=s, a_t=a)$$
+![Function approximators can either associate a state-action pair $(s, a)$ to its Q-value (left), or associate a state $s$ to the Q-values of all actions possible in that state (right).](img/functionapprox.png){#fig-functionapprox}
 
-
-* The derived policy $\pi_\theta$ uses for example an $\epsilon$-greedy or softmax action selection scheme over the estimated Q-values:
+When using Q-learning, we have already seen that the problem is a regression problem, where the following mse loss function has to be minimized:
 
 $$
-    \pi_\theta(s, a) \leftarrow \text{Softmax} (Q_\theta(s, a))
+    \mathcal{L}(\theta) = \mathbb{E}_{(s, a, r ,s')}[(r(s, a, s') + \gamma \, \max_{a'} Q_\theta(s', a') - Q_\theta(s, a))^2]
 $$
 
-# Function approximators to learn the Q-values
-
-There are two possibilities to approximate Q-values $Q_\theta(s, a)$:
-
-::: {.columns}
-::: {.column width=50%}
-
-* The DNN approximates the Q-value of a single $(s, a)$ pair.
-
-![](img/functionapproximation1.png)
-
-* The action space can be continuous.
-
-:::
-::: {.column width=50%}
+In short, we want to reduce the prediction error, i.e. the mismatch between the estimate of the value of an action $Q_\theta(s, a)$ and the real return $Q^\pi(s, a)$, here approximated with $r(s, a, s') + \gamma \, \text{max}_{a'} Q_\theta(s', a')$.
 
 
-* The DNN approximates the Q-value of all actions $a$ in a state $s$.
+![Value-based Q-learning agent.](img/valuebased-agent.png){#fig-valuebasedagent}
 
-![](img/functionapproximation2.png)
+We can compute this loss by gathering enough samples $(s, a, r, s')$ (i.e. single transitions), concatenating them randomly in minibatches, and let the DNN learn to minimize the prediction error using backpropagation and SGD, indirectly improving the policy. The following pseudocode would describe the training procedure when gathering transitions **online**, i.e. when directly interacting with the environment:
 
-* The action space must be discrete (one neuron per action).
+:::{.callout-note icon="false"}
+## Naive Q-learning with function approximation
 
-:::
-:::
+* Initialize value network $Q_{\theta}$ with random weights.
 
+* Initialize empty minibatch $\mathcal{D}$ of maximal size $n$.
 
-
-# First naive approach: Q-learning with function approximation
-
-We could simply adapt Q-learning with FA to the DNN:
-
-::: {.columns}
-::: {.column width=15%}
-
-:::
-::: {.column width=85%}
-
-* Initialize the deep neural network with parameters $\theta$. 
-
-* Start from an initial state $s_0$.
+* Observe the initial state $s_0$.
 
 * for $t \in [0, T_\text{total}]$:
 
-    * Select $a_{t}$ using a softmax over the Q-values $Q_\theta(s_t, a)$.
+    * Select the action $a_t$ based on the behavior policy derived from $Q_\theta(s_t, a)$ (e.g. softmax).
 
-    * Take $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
+    * Perform the action $a_t$ and observe the next state $s_{t+1}$ and the reward $r_{t+1}$.
 
-    * Update the parameters $\theta$ by minimizing the loss function:
+    * Store $(s_t, a_t, r_{t+1}, s_{t+1})$ in the minibatch.
 
-    $$\mathcal{L}(\theta) = (r_{t+1} + \gamma \, \max_{a'} Q_\theta(s_{t+1}, a') - Q_\theta(s_t, a_t))^2$$
+    * When minibatch $\mathcal{D}$ is full:
 
-    * **if** $s_t$ is terminal: sample another initial state $s_0$.
+        * Train the value network $Q_{\theta}$ on $\mathcal{D}$ to minimize 
 
+        $$
+        \mathcal{L}(\theta) = \mathbb{E}_\mathcal{D}[(r(s, a, s') + \gamma \, \text{max}_{a'} Q_\theta(s', a') - Q_\theta(s, a))^2]
+        $$
+
+        * Empty the minibatch $\mathcal{D}$.
 :::
-:::
 
+However, the definition of the loss function uses the mathematical expectation operator $E$ over all transitions, which can only be approximated by **randomly** sampling the distribution (the MDP). This implies that the samples concatenated in a minibatch should be independent from each other (**i.i.d**). 
 
-*Remark:* We will now omit the break for terminal states, it is always implicitly here.
+### Correlated inputs
 
-# DNN need stochastic gradient descent
+When gathering transitions online, the samples are correlated: $(s_t, a_t, r_{t+1}, s_{t+1})$ will be followed by $(s_{t+1}, a_{t+1}, r_{t+2}, s_{t+2})$, etc. When playing video games, two successive frames will be very similar (a few pixels will change, or even none if the sampling rate is too high) and the optimal action will likely not change either (to catch the ball in pong, you will need to perform the same action - going left - many times in a row).
 
-* This naive approach will not work: DNNs cannot learn from single examples (online learning = instability).
+![Sucessive frames in a video game are highly correlated.](img/breakout.png){#fig-breakout-correlated}
 
-* DNNs require **stochastic gradient descent** (SGD):
+**Correlated inputs/outputs** are very bad for deep neural networks: the DNN will overfit and fall into a very bad local minimum. That is why stochastic gradient descent works so well: it randomly samples values from the training set to form minibatches and minimize the loss function on these uncorrelated samples (hopefully). If all samples of a minibatch were of the same class (e.g. zeros in MNIST), the network would converge poorly. This is the first problem preventing an easy use of deep neural networks as function approximators in RL.
+
+### Non-stationary targets
+
+The second major problem is the **non-stationarity** of the targets in the loss function. In classification or regression, the desired values $\mathbf{t}$ are fixed throughout learning: the class of an object does not change in the middle of the training phase.
 
 $$
-    \mathcal{L}(\theta) = E_\mathcal{D} (||\textbf{t} - \textbf{y}||^2) \approx \frac{1}{K} \sum_{i=1}^K ||\textbf{t}_i - \textbf{y}_i||^2
+    \mathcal{L}(\theta) = - \mathbb{E}_{\mathbf{x}, \mathbf{t} \in \mathcal{D}}[ ||\mathbf{t} - \mathbf{y}||^2]
 $$
 
-* The loss function is estimated by **sampling** a minibatch of $K$ **i.i.d** samples from the training set to compute the loss function and update the parameters $\theta$.
+In Q-learning, the target :
 
-* This is necessary to avoid local minima of the loss function.
+$$
+    t = r(s, a, s') + \gamma \, \max_{a'} Q_\theta(s', a')
+$$
 
-* Although Q-learning can learn from single transitions, it is not possible using DNN. 
+will change during learning, as $Q_\theta(s', a')$ depends on the weights $\theta$ and will hopefully increase as the performance improves. This is the second problem of deep RL: deep NN are particularly bad on non-stationary problems, especially feedforward networks. They iteratively converge towards the desired value, but have troubles when the target also moves (like a dog chasing its tail).
 
-* Why not using the last $K$ transitions to train the network? We could store them in a **transition buffer** and train the network on it.
+![In supervised learning, the targets are stationary, leading to good convergence properties. In RL, the targets are non-stationary and depending on the network itself. This often leads to suboptimal convergence.](img/nonstationarity.svg){#fig-nonstationarity width=80%}
 
-# Second naive approach: Q-learning with a transition buffer
+## Deep Q-Network (DQN)
 
-::: {.columns}
-::: {.column width=15%}
+@Mnih2015 (originally arXived in @Mnih2013) proposed an elegant solution to the problems of correlated inputs/outputs and non-stationarity inherent to RL. This article is a milestone of deep RL and it is fair to say that it started the hype for deep RL.
 
-:::
-::: {.column width=85%}
+### Experience replay memory
 
-* Initialize the deep neural network with parameters $\theta$. 
+The first idea proposed by @Mnih2015 solves the problem of correlated input/outputs and is actually quite simple: instead of feeding successive transitions into a minibatch and immediately training the NN on it, transitions are stored in a huge buffer called **experience replay memory** (ERM) or **replay buffer** able to store 100000 transitions. When the buffer is full, new transitions replace the old ones. SGD can now randomly sample the ERM to form minibatches and train the NN.
 
-* Initialize an empty **transition buffer** $\mathcal{D}$ of size $K$: $\{(s_k, a_k, r_k, s'_k)\}_{k=1}^K$.
+![Experience replay memory. Interactions with the environment are stored in the ERM. Random minibatches are sampled from it to train the DQN value network.](img/ERM.png){#fig-erm}
 
-* for $t \in [0, T_\text{total}]$:
+The loss minimized by DQN is defined on a minibatch of size $K$:
 
-    * Select $a_{t}$ using a softmax over the Q-values $Q_\theta(s_t, a)$.
+$$
+    \mathcal{L}(\theta) = \dfrac{1}{K} \, \sum_{k=1}^K (r_k + \gamma \, \text{max}_{a'} Q_\theta(s'_k, a') - Q_\theta(s_k, a_k))^2
+$$
 
-    * Take $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
+Are these $K$ samples **i.i.d**? They are independent because they are randomly sampled from the ERM, but they do not come from the same distribution: some were generated by a very old policy, some much more recently... However, this does not matter, as Q-learning is **off-policy**: the different policies that populated the ERM are a **behavior policy**, different from the learned one. Off-policy methods do not mind if the samples come from the same distribution or not. It would be very different if we has used SARSA instead. 
 
-    * Store $(s_t, a_t, r_{t+1}, s_{t+1})$ in the transition buffer.
+→  **It is only possible to use an experience replay memory with off-policy algorithms**
 
-    * Every $K$ steps:
+### Target networks
 
-        * Update the parameters $\theta$ using the transition buffer:
+The second idea solves the non-stationarity of the targets $r(s, a, s') + \gamma \, \max_{a'} Q_\theta(s', a')$. Instead of computing it with the current parameters $\theta$ of the NN, they are computed with an old version of the NN called the **target network** with parameters $\theta'$. 
 
-        $$\mathcal{L}(\theta) = \frac{1}{K} \, \sum_{k=1}^K (r_k + \gamma \, \max_{a'} Q_\theta(s'_k, a') - Q_\theta(s_k, a_k))^2$$
+$$
+    \mathcal{L}(\theta) = \dfrac{1}{K} \, \sum_{k=1}^K (r_k + \gamma \, \text{max}_{a'} Q_{\theta'}(s'_k, a') - Q_\theta(s_k, a_k))^2
+$$
 
-        * Empty the transition buffer.
+The target network is updated only infrequently (every thousands of iterations or so) with the learned weights $\theta$. As this target network does not change very often, the targets stay constant for a long period of time, and the problem becomes more stationary.
 
-:::
-:::
 
+![The target network is used to compute the targets to train the value network. Its waits are regularly copied from the value network.](img/targetnetwork.png){#fig-targetnetwork}
 
+![By keeping the the targets constant for a while, the target network lets the value network catch up with them and converge optimally (in principle).](img/nonstationarity2.svg){#fig-nonstationarity2 width=80%}
 
-# Correlated inputs
+### DQN algorithm 
 
-* Unfortunately, this does not work either.
+The resulting algorithm is called **Deep Q-Network (DQN)**. It is summarized by the following pseudocode:
 
-* The last $K$ transitions $(s, a, r, s')$ are not **i.i.d** (independent and identically distributed).
+:::{.callout-note icon="false"}
+## DQN algorithm
 
-![](img/rl-sequence.png){width=40%}
+* Initialize value network $Q_{\theta}$ with random weights.
 
-* The transition $(s_{t+1}, a_{t+1}, r_{t+2}, s_{t+2})$ **depends** on $(s_{t}, a_{t}, r_{t+1}, s_{t+1})$ by definition, i.e. the transitions are **correlated**.
-
-* Even worse, when playing video games, successive frames will be very similar or even identical.
-
-
-![](img/breakout.png){width=50%}
-
-* The actions are also correlated: you move the paddle to the left for several successive steps.
-
-# Correlated inputs
-
-* Feeding transitions sequentially to a DNN is the same as giving all MNIST 0's to a DNN, then all 1's, etc... It does not work.
-
-![](img/erm-sequential.png){width=70%}
-
-* In SL, we have all the training data **before** training: it is possible to get i.i.d samples by shuffling the training set between two epochs.
-
-* In RL, we create the "training set" (transitions) **during** training: the samples are not i.i.d as we act sequentially over time.
-
-# Non-stationarity
-
-* In SL, the **targets** $\mathbf{t}$ do not change over time: an image of a cat stays an image of a cat throughout learning.
-
-$$\mathcal{L}(\theta) = \mathbb{E}_{\mathbf{x}, \mathbf{t} \sim \mathcal{D}} [||\mathbf{t} - F_\theta(\mathbf{x})||^2]$$
-
-![](img/catdog.jpg){width=60%}
-
-* The problem is said **stationary**, as the distribution of the data does not change over time.
-
-
-# Non-stationarity
-
-* In RL, the **targets** $t = r + \gamma \, \max_{a'} Q_\theta(s', a')$ do change over time: 
-
-    * $Q_\theta(s', a')$ depends on $\theta$, so after one optimization step, all targets have changed!
-
-    * As we improve the policy over training, we collect higher returns.
-
-$$\mathcal{L}(\theta) = \mathbb{E}_{s, a \sim \pi_\theta} [(r + \gamma \, \max_{a'} Q_\theta(s', a') - Q_\theta(s, a))^2]$$
-
-* NN do not like this. After a while, they give up and settle on a **suboptimal** policy.
-
-![](img/nonstationarity.svg){width=70%}
-
-# Illustration of non-stationary targets
-
-* We want our value estimates to "catch" the true values.
-
-![](img/targetshift1.png)
-
-::: footer
-<https://www.freecodecamp.org/news/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682/>
-::: 
-
-# Illustration of non-stationary targets
-
-* We update our estimate to come closer to the target.
-
-![](img/targetshift2.png)
-
-::: footer
-<https://www.freecodecamp.org/news/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682/>
-::: 
-
-# Illustration of non-stationary targets
-
-* But the target moves! We need to update again.
-
-![](img/targetshift3.png)
-
-::: footer
-<https://www.freecodecamp.org/news/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682/>
-::: 
-
-# Illustration of non-stationary targets
-
-* This leads to very strange and inefficient optimization paths.
-
-![](img/targetshift4.png)
-
-::: footer
-<https://www.freecodecamp.org/news/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682/>
-::: 
-
-# 1 - Deep Q-networks (DQN)
-
-![](img/paper-DQN.png)
-
-::: footer
-@Mnih2013 Playing Atari with Deep Reinforcement Learning. <http://arxiv.org/abs/1312.5602>
-:::
-
-# Problem with non-linear approximators and RL
-
-![](img/breakout.png){width=50%}
-
-* Non-linear approximators never really worked with RL before 2013 because of:
-
-    1. The correlation between successive inputs or outputs.
-
-    2. The non-stationarity of the problem.
-
-
-* These two problems are very bad for deep networks, which end up overfitting the learned episodes or not learning anything at all.
-
-* Deepmind researchers proposed to use two classical ML tricks to overcome these problems: 
-
-    1. experience replay memory.
-
-    2. target networks.
-
-::: footer
-Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D., et al. (2013). Playing Atari with Deep Reinforcement Learning. <http://arxiv.org/abs/1312.5602>
-:::
-
-
-# Experience replay memory
-
-* To avoid correlation between samples, @Mnih2015 proposed to store the $(s, a, r, s')$ transitions in a huge **experience replay memory** or **replay buffer**  $\mathcal{D}$ (e.g. 1 million transitions).
-
-![](img/ERM.png){width=60%}
-
-* When the buffer is full, we simply overwrite old transitions.
-
-* The Q-learning update is only applied on a **random minibatch** of those past experiences, not the last transitions.
-
-* This ensures the independence of the samples (non-correlated samples).
-
-# Experience replay memory
-
-* Initialize value network $Q_{\theta}$.
+* Copy $Q_{\theta}$ to create the target network $Q_{\theta'}$.
 
 * Initialize experience replay memory $\mathcal{D}$ of maximal size $N$.
 
+* Observe the initial state $s_0$.
+
 * for $t \in [0, T_\text{total}]$:
 
-    * Select an action $a_t$ based on $Q_\theta(s_t, a)$, observe $s_{t+1}$ and $r_{t+1}$.
+    * Select the action $a_t$ based on the behavior policy derived from $Q_\theta(s_t, a)$ (e.g. softmax).
+
+    * Perform the action $a_t$ and observe the next state $s_{t+1}$ and the reward $r_{t+1}$.
 
     * Store $(s_t, a_t, r_{t+1}, s_{t+1})$ in the experience replay memory.
 
@@ -287,645 +138,60 @@ Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D.,
 
         * Sample a minibatch $\mathcal{D}_s$ randomly from $\mathcal{D}$.
 
-        * For each transition $(s_k, a_k, r_k, s'_k)$ in the minibatch:
+        * For each transition $(s, a, r, s')$ in the minibatch:
 
-            * Compute the target value $t_k = r_k + \gamma \, \max_{a'} Q_{\theta}(s'_k, a')$
+            * Predict the Q-value of the greedy action in the next state $\max_{a'} Q_{\theta'}(s', a')$ using the target network.
 
-        * Update the value network $Q_{\theta}$ on $\mathcal{D}_s$ to minimize:
+            * Compute the target value $t = r + \gamma \, \max_{a'} Q_{\theta'}(s', a')$.
 
-        $$\mathcal{L}(\theta) = \mathbb{E}_{\mathcal{D}_s}[(t_k - Q_\theta(s_k, a_k))^2]$$
-
-
-# Experience replay memory
-
-![](img/ERM.png){width=60%}
-
-
-* But wait! The samples of the minibatch are still not i.i.d, as they are not **identically distributed**:
-
-    * Some samples were generated with a very old policy $\pi_{\theta_0}$.
-
-    * Some samples have been generated recently by the current policy $\pi_\theta$.
-
-* The samples of the minibatch do not come from the same distribution, so this should not work. 
-
-
-
-# Experience replay memory
-
-* This should not work, except if you use an **off-policy** algorithm, such as Q-learning!
-
-$$Q^\pi(s, a) = \mathbb{E}_{s_t \sim \rho_b, a_t \sim b}[ r_{t+1} + \gamma \, \max_a Q^\pi(s_{t+1}, a) | s_t = s, a_t=a]$$
-
-* In Q-learning, you can take samples from **any** behavior policy $b$, as long as the coverage assumption stands:
-
-
-$$ \pi(s,a) > 0 \Rightarrow b(s,a) > 0$$
-
-* Here, the behavior policy $b$ is a kind of "superset" of all past policies $\pi$ used to fill the ERM, so it "covers" the current policy.
-
-$$b = \{\pi_{\theta_0}, \pi_{\theta_1}, \ldots, \pi_{\theta_t}\}$$
-
-* Samples from $b$ are i.i.d, so Q-learning is going to work.
-
-
-# Experience replay memory
-
-
-* Note: **it is not possible to use an experience replay memory with on-policy algorithms.**
-
-$$Q^\pi(s, a) = \mathbb{E}_{s_t \sim \rho_\pi, a_t \sim \pi}[ r_{t+1} + \gamma \, Q^\pi(s_{t+1}, a_{t+1}) | s_t = s, a_t=a]$$
-
-* $a_{t+1} \sim \pi_\theta$ would not be the same between $\pi_{\theta_0}$ (which generated the sample) and $\pi_{\theta_t}$ (the current policy).
-
-* The estimated return $r_{t+1} + \gamma \, Q^\pi(s_{t+1}, a_{t+1})$ would be biased, impairing convergence.
-
-# Target network
-
-
-* The second problem when using DNN for RL is that the target is **non-stationary**, i.e. it changes over time: as the network becomes better, the Q-values have to increase.
-
-::: {.columns}
-::: {.column width=50%}
-
-
-* In DQN, the target for the update is not computed from the current deep network $\theta$:
-
-$$
-    r + \gamma \, \max_{a'} Q_\theta(s', a')
-$$
-
-but from a **target network** $\theta´$ updated only every few thousands of iterations.
-
-
-$$
-    r + \gamma \, \max_{a'} Q_{\theta'}(s', a')
-$$
-
-* $\theta'$ is simply a copy of $\theta$ from the past.
-
-:::
-::: {.column width=50%}
-
-
-![](img/targetnetwork.png)
-
-:::
-:::
-
-
-* DQN loss function:
-
-$$
-    \mathcal{L}(\theta) = \mathbb{E}_\mathcal{D} [(r + \gamma \, \max_{a'} Q_{\theta'}(s', a')) - Q_\theta(s, a))^2]
-$$
-
-# Target network
-
-
-* This allows the target $r + \gamma \, \max_{a'} Q_{\theta'}(s', a')$ to be **stationary** between two updates.
-
-* It leaves time for the trained network to catch up with the targets.
-
-
-![](img/nonstationarity2.svg){width=70%}
-
-
-* The update is simply replacing the parameters $\theta'$ with the trained parameters $\theta$:
-
-$$\theta' \leftarrow \theta$$
-
-* The value network $\theta$ basically learns using an older version of itself...
-
-<br>
-
-::: footer
-@Mnih2013 Playing Atari with Deep Reinforcement Learning. <http://arxiv.org/abs/1312.5602>
-:::
-
-# DQN: Deep Q-network
-
-* Initialize value network $Q_{\theta}$ and target network $Q_{\theta'}$.
-
-* Initialize experience replay memory $\mathcal{D}$ of maximal size $N$.
-
-* for $t \in [0, T_\text{total}]$:
-
-    * Select an action $a_t$ based on $Q_\theta(s_t, a)$, observe $s_{t+1}$ and $r_{t+1}$.
-
-    * Store $(s_t, a_t, r_{t+1}, s_{t+1})$ in the experience replay memory.
-
-    * Every $T_\text{train}$ steps:
-
-        * Sample a minibatch $\mathcal{D}_s$ randomly from $\mathcal{D}$.
-
-        * For each transition $(s_k, a_k, r_k, s'_k)$ in the minibatch:
-
-            * Compute the target value $t_k = r_k + \gamma \, \max_{a'} Q_{\theta'}(s'_k, a')$ using the target network.
-
-        * Update the value network $Q_{\theta}$ on $\mathcal{D}_s$ to minimize:
-
-        $$\mathcal{L}(\theta) = \mathbb{E}_{\mathcal{D}_s}[(t_k - Q_\theta(s_k, a_k))^2]$$
+        * Train the value network $Q_{\theta}$ on $\mathcal{D}_s$ to minimize $\mathcal{L}(\theta) = \mathbb{E}_{\mathcal{D}_s}[(t - Q_\theta(s, a))^2]$
 
     * Every $T_\text{target}$ steps:
 
-        * Update target network: $\theta' \leftarrow \theta$.
-
-
-# DQN: Deep Q-network
-
-* The deep network can be anything. Deep RL is only about defining the loss function adequately.
-
-* For pixel-based problems (e.g. video games), convolutional neural networks (without max-pooling) are the weapon of choice.
-
-![](img/dqn.png){width=80%}
-
-
-::: footer
-Source: @Mnih2015 Human-level control through deep reinforcement learning. Nature 518, 529–533. doi:10.1038/nature14236.
-:::
-
-# Why no max-pooling?
-
-::: {.columns}
-::: {.column width=50%}
-
-
-![](img/maxpooling.jpg){width=70%}
+        * Update the target network with the trained value network:  $\theta' \leftarrow \theta$
 
 :::
-::: {.column width=50%}
 
 
-![](img/vgg16.png)
+The first thing to notice is that experienced transitions are not immediately used for learning, but simply stored in the ERM to be sampled later. Due to the huge size of the ERM, it is even likely that the recently experienced transition will only be used for learning hundreds or thousands of steps later. Meanwhile, very old transitions, generated using an initially bad policy, can be used to train the network for a very long time.
 
-:::
-:::
-
-
-* The goal of max-pooling is to get rid of the spatial information in the image.
-
-* For object recognition, you do not care whether the object is in the center or on the side of the image.
-
-* Max-pooling brings **spatial invariance**.
-
-* In video games, you **want** to keep the spatial information: the optimal action depends on where the ball is relative to the paddle.
-
-
-# Are individual frames good representations of states?
-
-* Is the ball moving from the child to the baseball player, or the other way around?
-
-![](img/markov-example.jpeg)
-
-* Using video frames as states breaks the Markov property: the speed and direction of the ball is a very relevant information for the task, but not contained in a single frame.
-
-* This characterizes a **Partially-observable Markov Decision Process** (POMDP).
-
-::: footer
-Source: <https://medium.com/emergent-future/simple-reinforcement-learning-with-tensorflow-part-6-partial-observability-and-deep-recurrent-q-68463e9aeefc>
-:::
-
-
-# Markov property in video games
-
-* The simple solution retained in the original DQN paper is to **stack** the last four frames to form the state representation.
-
-* Having the previous positions of the ball, the network can **learn** to infer its direction of movement.
-
-
-![](img/DQNBreakoutBlocks.png)
-
-
-
-# DQN training
-
-* 50M frames (38 days of game experience) per game. Replay buffer of 1M frames.
-
-* Action selection: $\epsilon$-greedy with $\epsilon = 0.1$ and annealing. Optimizer: RMSprop with a batch size of 32.
-
-![](img/dqn-results.png)
-
-
-::: footer
-@Mnih2015 Human-level control through deep reinforcement learning. Nature 518, 529–533. doi:10.1038/nature14236.
-:::
-
-# DQN to solve multiple Atari games
-
-{{< youtube TmPfTpjtdgg >}}
-
-
-# DQN to solve multiple Atari games
-
-{{< youtube W2CAghUiofY >}}
-
-
-# DQN to solve multiple Atari games
-
-::: {.columns}
-::: {.column width=45%}
-
-
-![](img/atari-results.png)
-
-:::
-::: {.column width=55%}
-
-
-* The DQN network was trained to solve 49 different Atari 2600 games **with the same architecture and hyperparameters**.
-
-* In most of the games, the network reaches **super-human** performance.
-
-* Some games are still badly performed (e.g. Montezuma's revenge), as they require long-term planning.
-
-* It was the first RL algorithm able to learn different tasks (no free lunch theorem).
-
-* The 2015 paper in Nature started the hype for deep RL.
-
-:::
-:::
-
-
-::: footer
-@Mnih2015 Human-level control through deep reinforcement learning. Nature 518, 529–533. doi:10.1038/nature14236.
-:::
-
-# 2 - Double DQN
-
-![](img/paper-ddqn.png)
-
-::: footer
-@vanHasselt2015 Deep Reinforcement Learning with Double Q-learning, arXiv:1509.06461.
-:::
-
-# Double DQN
-
-* Q-learning methods, including DQN, tend to **overestimate** Q-values, especially for the non-greedy actions:
-
-$$Q_\theta(s, a) > Q^\pi(s, a)$$
-
-* This does not matter much in action selection, as we apply $\epsilon$-greedy or softmax on the Q-values anyway, but it may make learning slower (sample complexity) and less optimal.
-
-![](img/ddqn-results1.png){width=80%}
-
-::: footer
-@vanHasselt2015 Deep Reinforcement Learning with Double Q-learning, arXiv:1509.06461.
-:::
-
-# Double DQN
-
-* To avoid optimistic estimations, the target is computed by both the value network $\theta$ and the target network $\theta'$:
-
-    * **Action selection**: The next greedy action $a^*$ is calculated by the **value network** $\theta$ (current policy):
-
-    $$
-    a^* =\text{argmax}_{a'} Q_{\theta}(s', a')
-    $$
-
-    * **Action evaluation**: Its Q-value for the target is calculated using the **target network** $\theta'$ (older values):
-
-    $$
-    t = r + \gamma \, Q_{\theta'}(s´, a^*)
-    $$
-   
-* This gives the following loss function for **double DQN** (DDQN):
+The second thing is that the target network is not updated very often ($T_\text{target}=10000$), so the target values are going to be wrong a long time. More recent algorithms such as DDPG use a smoothed version of the current weights, as proposed in @Lillicrap2015:
 
 $$
-    \mathcal{L}(\theta) = \mathbb{E}_\mathcal{D} [(r + \gamma \, Q_{\theta'}(s´, \text{argmax}_{a'} Q_{\theta}(s', a')) - Q_\theta(s, a))^2]
-$$ 
-
-
-::: footer
-@vanHasselt2015 Deep Reinforcement Learning with Double Q-learning, arXiv:1509.06461.
-:::
-
----
-
-![](img/ddqn-results2.png){width=90%}
-
-::: footer
-@vanHasselt2015 Deep Reinforcement Learning with Double Q-learning, arXiv:1509.06461.
-:::
-
-# 3 - Prioritized Experience Replay
-
-![](img/paper-per.png)
-
-::: footer
-@Schaul2015 Prioritized Experience Replay. arXiv:1511.05952
-:::
-
-# Prioritized Experience Replay
-
-
-![Source: <https://parksurk.github.io/deep/reinfocement/learning/drlnd_2-4_value_based_methods-post/>](img/replaybuffer.png){width=60%}
-
-* The **experience replay memory** or **replay buffer** is used to store the last 1M transitions $(s, a, r, s')$.
-
-* The learning algorithm **randomly samples** a minibatch of size $K$ to update its parameters.
-
-* Not all transitions are interesting:
-
-    * Some transitions were generated by a very old policy, the current policy won't take them anymore.
-
-    * Some transitions are already well predicted: the TD error is small, there is nothing to learn from.
-
-    $$\delta_t = r_{t+1} + \gamma \, \max_{a'} Q_\theta(s_{t+1}, a_{t+1}) - Q_\theta(s_t, a_t) \approx 0$$
-
-
-# Prioritized Experience Replay
-
-
-![Source: <https://parksurk.github.io/deep/reinfocement/learning/drlnd_2-4_value_based_methods-post/>](img/replaybuffer.png){width=60%}
-
-* The experience replay memory makes learning very **slow**: we need a lot of samples to learn something useful:
-
-    * High **sample complexity**.
-
-* We need a smart mechanism to preferentially pick the transitions that will boost learning the most, without introducing a bias.
-
-    * **Prioritized sweeping** is actually a quite old idea:
-
-> @Moore1993 Prioritized sweeping: Reinforcement learning with less data and less time. Machine Learning, 13(1):103–130.
-
-
-# Prioritized Experience Replay
-
-* The idea of **prioritized experience replay** (PER) is to sample in priority those transitions whose TD error is the highest:
-
-
-$$\delta_t = r_{t+1} + \gamma \, \max_{a'} Q_\theta(s_{t+1}, a_{t+1}) - Q_\theta(s_t, a_t)$$
-
-* In practice, we insert the transition $(s, a, r, s', \delta)$ into the replay buffer.
-
-* To create a minibatch, the sampling algorithm select a transition $k$ based on the probability:
-
-$$P(k) = \frac{(|\delta_k| + \epsilon)^\alpha}{\sum_k (|\delta_k| + \epsilon)^\alpha}$$
-
-* $\epsilon$ is a small parameter ensuring that transition with no TD error still get sampled from time to time.
-
-* $\alpha$ allows to change the behavior from uniform sampling ($\alpha=0$, as in DQN) to fully prioritized sampling ($\alpha=1$). $\alpha$ should be annealed from 0 to 1 during training.
-
-* Think of it as a "kind of" **softmax** over the TD errors.
-
-* After the samples have been used for learning, their TD error $\delta$ is updated in the PER.
-
-::: footer
-Schaul et al. (2015). Prioritized Experience Replay. arXiv:1511.05952
-:::
-
-
-# Prioritized Experience Replay
-
-* The main drawback is that inserting and sampling can be computationally expensive if we simply sort the transitions based on $(|\delta_k| + \epsilon)^\alpha$:
-
-    * Insertion: $\mathcal{O}(N \, \log N)$.
-
-    * Sampling: $\mathcal{O}(N)$.
-
-![Source: <https://jaromiru.com/2016/11/07/lets-make-a-dqn-double-learning-and-prioritized-experience-replay/>](img/per_bar_1.png)
-
-
-# Prioritized Experience Replay
-
-* Using binary **sumtrees**, prioritized experience replay can be made efficient in both insertion ($\mathcal{O}(\log N)$) and sampling ($\mathcal{O}(1)$).
-
-* Instead of a linear queue, we use a binary tree to store the transitions.
-
-* Details in a real computer science course...
-
-:::{}
-![Source: <https://www.freecodecamp.org/news/improvements-in-deep-q-learning-dueling-double-dqn-prioritized-experience-replay-and-fixed-58b130cc5682/>](img/per_tree.png){width=60%}
-:::
-
-
-
-
-# Prioritized Experience Replay
-
-
-![](img/per_results1.png){width=100%}
-
-::: footer
-@Schaul2015 Prioritized Experience Replay. arXiv:1511.05952
-:::
-
-# Prioritized Experience Replay
-
-
-![](img/per_results2.png){width=100%}
-
-::: footer
-@Schaul2015 Prioritized Experience Replay. arXiv:1511.05952
-:::
-
-# 4 - Dueling networks
-
-![](img/paper-dueling.png)
-
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
-
-# Dueling networks
-
-* DQN and its variants learn to predict directly the Q-value of each available action.
-
-:::{}
-![](img/duelling1.png){width=50%}
-:::
-
-* Several problems with predicting Q-values with a DNN:
-
-    * The Q-values can take high values, especially with different values of $\gamma$.
-
-    * The Q-values have a high variance, between the minimum and maximum returns obtained during training.
-
-    * For a transition $(s_t, a_t, s_{t+1})$, a single Q-value is updated, not all actions in $s_t$.
-
-
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
-
-
-# Dueling networks
-
-::: {.columns}
-::: {.column width=50%}
-
-
-* Enduro game.
-
-![Source: <https://gfycat.com/clumsypaleimpala>](img/enduro.gif)
-
-
-:::
-::: {.column width=50%}
-
-
-![](img/dueling-principle.svg)
-
-:::
-:::
-
-
-* The exact Q-values of all actions are not equally important.
-
-    * In **bad** states (low $V^\pi(s)$), you can do whatever you want, you will lose.
-
-    * In neutral states, you can do whatever you want, nothing happens.
-
-    * In **good** states (high $V^\pi(s)$), you need to select the right action to get rewards, otherwise you lose.
-
-
-# Advantage functions
-
-::: {.columns}
-::: {.column width=50%}
-
-
-![](img/dueling-principle2.svg)
-
-:::
-::: {.column width=50%}
-
-
-* An important notion is the **advantage** $A^\pi(s, a)$ of an action:
-
-$$
-    A^\pi(s, a) = Q^\pi(s, a) - V^\pi(s)
+    \theta' = \tau \, \theta + (1-\tau) \, \theta'
 $$
 
-* It tells how much return can be expected by taking the action $a$ in the state $s$, **compared** to what is usually obtained in $s$ with the current policy.
+If this rule is applied after each step with a very small rate $\tau$, the target network will slowly track the learned network, but never be the same. Modern implementations of DQN use this smoothed version.
 
-* If a policy $\pi$ is deterministic and always selects $a^*$ in $s$, we have:
+These two facts make DQN extremely slow to learn: millions of transitions are needed to obtain a satisfying policy. This is called the **sample complexity**, i.e. the number of transitions needed to obtain a satisfying performance. DQN finds very good policies, but at the cost of a very long training time.
 
-$$
-    A^\pi(s, a^*) = 0
-$$
-$$
-    A^\pi(s, a \neq a^*) < 0
-$$
+DQN was initially applied to solve various Atari 2600 games. Video frames were used as observations and the set of possible discrete actions was limited (left/right/up/down, shoot, etc). The CNN used is depicted on @fig-dqn. It has two convolutional layers, no max-pooling, 2 fully-connected layer and one output layer representing the Q-value of all possible actions in the games.
 
-:::
-:::
+![Architecture of the CNN used in the original DQN paper. Source: @Mnih2015.](img/dqn.png){#fig-dqn}
 
+The problem of partial observability (a single frame does not hold the Markov property) is solved by concatenating the four last video frames into a single tensor used as input to the CNN. The convolutional layers become able through learning to extract the speed information from it. Some of the Atari games (Pinball, Breakout) were solved with a performance well above human level, especially when they are mostly reactive. Games necessitating more long-term planning (Montezuma's Revenge) were still poorly learned, though.
 
-* This is particularly true for the optimal policy.
+:::{.callout-tip icon="false"}
+## Why no max-pooling? 
 
-* But if we have separate estimates $V_\varphi(s)$ and $Q_\theta(s, a)$, some actions may have a positive advantage.
+The CNN used in deep RL agents (DQN or others) usually do not have many max-pooling layers (or strides, which are equivalent). The goal of a max-pooling layer is to achieve **spatial invariance**, i.e. being able to recognize an object whatever its position in the input image. A cat is a cat, whether it is on the left or the right of the image.
 
-* Advantages have **less variance** than Q-values.
+However, we usually do not want spatial invariance in RL: the location of the ball in the frame in Breakout or Pinball is extremely important for the policy, we do not want to get rid of it. 
 
-
-# Dueling networks
-
-:::{}
-![](img/duelling2.png){width=60%}
+The drawback of not having max-pooling layers is that the last convolutional layer (before the first FC layer) will still have a lot of elements, so the first FC matrix will likely be huge. This limits the ability of deep RL algorithms to work with big images. 
 :::
 
-* In **dueling networks**, the network is forced to decompose the estimated Q-value $Q_\theta(s, a)$ into a state value $V_\alpha(s)$ and an advantage function $A_\beta(s, a)$:
-
-$$
-    Q_\theta(s, a) = V_\alpha(s) + A_\beta(s, a)
-$$
-
-* The parameters $\alpha$ and $\beta$ are just two shared subparts of the NN $\theta$.
-
-* The loss function 
-
-$$\mathcal{L}(\theta) = \mathbb{E}_\mathcal{D} [(r + \gamma \, Q_{\theta'}(s´, \text{argmax}_{a'} Q_{\theta}(s', a')) - Q_\theta(s, a))^2]$$ 
-
-is exactly the same as in (D)DQN: only the internal structure of the NN changes.
-
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
-
-# Unidentifiability
-
-* The Q-values are the sum of two functions: $\; Q_\theta(s, a) = V_\alpha(s) + A_\beta(s, a)$
-
-* However, the sum is **unidentifiable**: 
-
-$$
-\begin{aligned}
-Q_\theta(s, a) = 10 & = 1 + 9 \\
-                    & = 2 + 8 \\
-                    & = 3 + 7 \\
-\end{aligned}
-$$
-
-* To constrain the sum, (Wang et al. 2016) propose that the greedy action w.r.t the advantages should have an advantage of 0:
-
-$$
-    Q_\theta(s, a) = V_\alpha(s) + (A_\beta(s, a) - \max_{a'} A_\beta(s, a'))
-$$
-
-* This way, there is only one solution to the addition. The operation is differentiable, so backpropagation will work.
-
-* (Wang et al. 2016) show that subtracting the mean advantage works better in practice:
-
-$$
-    Q_\theta(s, a) = V_\alpha(s) + (A_\beta(s, a) - \frac{1}{|\mathcal{A}|} \, \sum_{a'} A_\beta(s, a'))
-$$
-
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
-
-# Visualization of the value and advantage functions
-
-* Which pixels change the most the value and advantage functions?
-
-![](img/dueling-result2.png){width=100%}
+Beside being able to learn using delayed and sparse rewards in highly dimensional input spaces, the true *tour de force* of DQN is that it was able to learn the 49 Atari games using the same architecture and hyperparameters, showing the generality of the approach. 
 
 
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
+{{< video https://www.youtube.com/embed/TmPfTpjtdgg
+    title="DQN"
+    aspect-ratio="16x9" 
+>}}
 
+{{< video https://www.youtube.com/embed/W2CAghUiofY
+    title="DQN"
+    aspect-ratio="16x9" 
+>}}
 
-# Improvement over prioritized DDQN
-
-![](img/dueling-result.png){width=60%}
-
-
-::: footer
-@Wang2016 Dueling Network Architectures for Deep Reinforcement Learning. arXiv:1511.06581.
-:::
-
-
-# Summary of DQN
-
-::: {.columns}
-::: {.column width=50%}
-
-
-![](img/dqn.png){width=100%}
-
-:::
-::: {.column width=50%}
-
-
-* DQN and its early variants (double duelling DQN with PER) are an example of **value-based deep RL**.
-
-* The value $Q_\theta(s, a)$ of each possible action in a given state is approximated by a convolutional neural network.
-
-* The NN has to minimize the mse between the predicted Q-values and the target value corresponding to the Bellman equation:
-
-:::
-:::
-
-$$\mathcal{L}(\theta) = \mathbb{E}_\mathcal{D} [(r + \gamma \, Q_{\theta'}(s´, \text{argmax}_{a'} Q_{\theta}(s', a')) - Q_\theta(s, a))^2]$$ 
-
-* The use of an **experience replay memory** and of **target networks** allows to stabilize learning and avoid suboptimal policies.
-
-* The main drawback of DQN is **sample complexity**: it needs huge amounts of experienced transitions to find a correct policy. The sample complexity come from the deep network itself (gradient descent is iterative and slow), but also from the ERM: it contains 1M transitions, most of which are outdated.
-
-* Only works for **small and discrete action spaces** (one output neuron per action).
-
-
-# References
+![Results on the Atari benchmark. Some games achieved super-human performance. Source: @Mnih2015](img/atari-results.png){#fig-dqnresults}

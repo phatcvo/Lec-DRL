@@ -1,12 +1,91 @@
 ---
 title: "Deep Reinforcement Learning"
-subtitle: "A comprehensive course covering fundamental concepts and cutting-edge techniques in Deep RL. From basic tabular methods to advanced deep learning approaches."
+subtitle: "A Comprehensive Course on Modern Reinforcement Learning"
+author: ""
+date: ""
 echo: false
-toc-title: "Course Contents"
+format:
+  html:
+    theme: cosmo
+    css: [assets/custom.scss, assets/homepage.scss]
+    toc: true
+    toc-location: left
+    toc-title: "Course Contents"
+    navbar:
+      title: "Deep RL Course"
+      left:
+        - text: "Home"
+          href: index.html
+        - text: "Lectures"
+          menu:
+            - text: "Introduction"
+              href: "#introduction"
+            - text: "Tabular RL"
+              href: "#tabular-rl"
+            - text: "Model-free RL"
+              href: "#model-free-rl"
+            - text: "Model-based RL"
+              href: "#model-based-rl"
+        - text: "Slides"
+          menu:
+            - text: "All Slides"
+              href: "slides/"
+            - text: "---"
+            - text: "Introduction"
+              href: "slides/0-Introduction.html"
+            - text: "Bandits"
+              href: "slides/1.1-Bandits.html"
+            - text: "MDP"
+              href: "slides/1.2-MDP.html"
+        - text: "Resources"
+          menu:
+            - text: "GitHub Repository"
+              href: "https://github.com/phatcvo/Lec-DRL"
+            - text: "Bibliography"
+              href: "#bibliography"
+      right:
+        - icon: github
+          href: "https://github.com/phatcvo/Lec-DRL"
+          aria-label: GitHub
 ---
 
 
+::: {.hero-banner}
+# Welcome to Deep Reinforcement Learning
 
+This comprehensive course covers the fundamental concepts and cutting-edge techniques in Deep Reinforcement Learning (DRL). From basic tabular methods to advanced deep learning approaches, you'll explore the complete landscape of modern RL.
+
+::: {.btn-group}
+[Get Started](#lectures){.btn .btn-primary .btn-lg}
+[View Slides](slides/){.btn .btn-outline-secondary .btn-lg}
+:::
+:::
+
+::: {.features}
+## Course Features
+
+::: {.feature-grid}
+::: {.feature-item}
+### 📚 Comprehensive Content
+Complete coverage from basic concepts to advanced deep RL techniques including DQN, Policy Gradients, Actor-Critic methods, and Model-based RL.
+:::
+
+::: {.feature-item}
+### 🎯 Practical Focus
+Each topic includes both theoretical foundations and practical implementations with real-world examples and applications.
+:::
+
+::: {.feature-item}
+### 📊 Interactive Materials
+Rich multimedia content with slides, detailed explanations, mathematical derivations, and visual illustrations.
+:::
+
+::: {.feature-item}
+### 🔄 Progressive Learning
+Structured curriculum that builds knowledge step-by-step from fundamental concepts to advanced research topics.
+:::
+:::
+:::
 
 ## Lectures
 
@@ -82,7 +161,9 @@ A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gr
 DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics.""",
     '2.6-PPO': """**2.6 - PPO: Proximal Policy Optimization**\\
 PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates.""",
-    '2.8-SAC': """**2.8 - SAC: Soft Actor-Critic**\\
+    '2.7-ACER': """**2.7 - ACER: Actor-Critic with Experience Replay**\\
+The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.""",
+    '2.8-EntropyRL': """**2.8 - SAC: Soft Actor-Critic**\\
 Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.""",
 }
 table_lecture(lecs)
@@ -100,6 +181,8 @@ lecs = {
 Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. """,
     '3.2-LearnedModels': """**3.2 - Planning with learned World models**\\
 Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.""",
+    '3.3-Planning': """**3.3 - Planning (MPC, TDM)**\\   
+Model-based learning is not only used to augment MF methods with imaginary rollouts.""",
     '3.4-WorldModels': """**3.4 - World models, Dreamer**\\
 The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.""",
     '3.5-AlphaGo': """**3.5 - AlphaGo**\\

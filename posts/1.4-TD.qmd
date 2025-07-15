@@ -1,499 +1,225 @@
----
-title: "Temporal Difference"
-subtitle: "TD algorithms allow learning from single transitions"
-format:
-  html:
-    toc: true
-    toc-location: left
-    code-fold: false
-    link-external-newwindow: true
----
-
-# 1 - Temporal Difference Learning
-
-# Temporal-Difference (TD) learning
+# Temporal Difference learning
 
 
-* MC methods wait until the end of the episode to compute the obtained return:
+## Temporal difference
+
+The main drawback of Monte Carlo methods is that the task must be composed of finite episodes. Not only is it not always possible, but value updates have to wait for the end of the episode, what slows learning down. 
+
+**Temporal difference** methods simply replace the actual return obtained after a state or an action, by an estimation composed of the reward immediately received plus the value of the next state or action:
 
 $$
-    V(s_t) \leftarrow V(s_t) + \alpha (R_t - V(s_t))
+    R_t \approx r(s, a, s') + \gamma \, V^\pi(s')
 $$
 
-* If the episode is very long, learning might be very slow. If the task is continuing, it is impossible.
+As seen in Section @sec-dp, this comes from the simple relationship $R_t = r_{t+1}  + \gamma \, R_{t+1}$. 
 
-::: {.columns}
-::: {.column width=70%}
-
-* Considering that the return at time $t$ is the immediate reward plus the return in the next step:
+This gives us the following update rule for the value of a state:
 
 $$
-    R_t = r_{t+1} + \gamma \,  R_{t+1}
+    V(s) \leftarrow V(s) + \alpha (r(s, a, s') + \gamma \, V(s') - V(s))
 $$
 
-we could replace $R_{t+1}$ by an estimate, which is the value of the next state:
 
-$$V^\pi(s_{t+1}) = \mathbb{E}_\pi [R_{t+1} | s_{t+1}=s]$$
-
-* This gives us:
-
-$$R_t \approx r_{t+1} + \gamma \,  V^\pi(s_{t+1})$$
-
-:::
-::: {.column width=30%}
-
-![](img/MCTD.svg){width=80%}
-
-:::
-:::
-
-# Temporal-Difference (TD) learning
-
-::: {.columns}
-::: {.column width=70%}
-
-
-* **Temporal-Difference (TD)** methods simply replace the actual return by an estimation in the update rule:
+The quantity:
 
 $$
-    V(s_t) \leftarrow V(s_t) + \alpha \, (r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t))
+ \delta = r(s, a, s') + \gamma \, V(s') - V(s)
 $$
 
-where $r_{t+1} + \gamma\, V(s_{t+1})$ is a sampled estimate of the return.
+is called the **reward-prediction error** (RPE), **TD error**, or **1-step advantage**: it defines the surprise between the current expected return ($V(s)$) and its sampled target value, estimated as the immediate reward plus the expected return in the next state.
 
-* The quantity
+* If $\delta > 0$, the transition was positively surprising: one obtains more reward or lands in a better state than expected. The initial state or action was actually underrated, so its estimated value must be increased.
+* If $\delta < 0$, the transition was negatively surprising. The initial state or action was overrated, its value must be decreased.
+* If $\delta = 0$, the transition was fully predicted: one obtains as much reward as expected, so the values should stay as they are.
 
-$$\delta_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)$$
+The main advantage of this learning method is that the update of the V-value can be applied immediately after a transition: no need to wait until the end of an episode, or even to have episodes at all: this is called **online learning** and allows very fast learning from single transitions. The main drawback is that the updates depend on other estimates, which are initially wrong: it will take a while before all estimates are correct.
 
-:::
-::: {.column width=30%}
+![Temporal difference algorithms update values after a single transition. Source: @Sutton1998.](img/backup-TD.png){#fig-td width=3%}
 
-![](img/MCTD.svg){width=80%}
+:::{.callout-note icon="false"}
+## TD(0) policy evaluation
 
-:::
-:::
+**while** True:
 
+* Start from an initial state $s_0$.
 
-is called equivalently the **reward prediction error** (RPE), the **TD error** or the **advantage** of the action $a_t$. 
+* **foreach** step $t$ of the episode:
 
-* It is the difference between:
+    * Select $a_t$ using the current policy $\pi$ in state $s_t$.
 
-    * the estimated return in state $s_t$: $V(s_t)$.
+    * Apply $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
 
-    * the actual return $r_{t+1} + \gamma \, V(s_{t+1})$, computed with an estimation.
+    * Compute the TD error:
 
-* If $\delta_t > 0$, it means that we received more reward $r_{t+1}$ than expected, or that we arrived in a state $s_{t+1}$ better than expected. We should increase the value of $s_t$ as we **underestimate** it.
+    $$\delta_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)$$
 
-* If $\delta_t < 0$, we should decrease the value of $s_t$ as we **overestimate** it.
+    * Update the state-value function of $s_t$:
 
+    $$
+        V(s_t) = V(s_t) + \alpha \, \delta_t
+    $$
 
-# TD policy evaluation TD(0)
-
-* The learning procedure in TD is possible after each transition: the backup diagram is limited to only one state and its follower.
-
-::: {.columns}
-::: {.column width=30%}
-
-**Backup diagram of TD(0)**
-
-![](img/backup-TD.png)
+    * **if** $s_{t+1}$ is terminal: **break**
 
 :::
-::: {.column width=70%}
 
+:::{.callout-tip icon="false"}
+## Bias-variance trade-off of TD
 
-* **while** True:
+By using an **estimate of the return** $R_t$ instead of directly the return as in MC, 
 
-    * Start from an initial state $s_0$.
+* we **increase the bias** (estimates are always wrong, especially at the beginning of learning) 
+* but we **reduce the variance**: only $r(s, a, s')$ is stochastic, not the value function $V^\pi$.
 
-    * **foreach** step $t$ of the episode:
-
-        * Select $a_t$ using the current policy $\pi$ in state $s_t$.
-
-        * Apply $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
-
-        * Compute the TD error:
-
-        $$\delta_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)$$
-
-        * Update the state-value function of $s_t$:
-
-        $$
-            V(s_t) \leftarrow V(s_t) + \alpha \, \delta_t
-        $$
-
-        * **if** $s_{t+1}$ is terminal: **break**
-
+We can therefore expect **less optimal solutions**, but we will also need **less samples**.
+TD has a better **sample efficiency** than MC, but a worse **convergence** (suboptimal).
 :::
+
+A similar TD update rule can be defined for the Q-values:
+
+$$
+    Q(s, a) \leftarrow Q(s, a) + \alpha (r(s, a, s') + \gamma \, Q(s', a') - Q(s, a))
+$$
+
+When learning Q-values directly, the question is which next action $a'$ should be used in the update rule: the action that will actually be taken for the next transition (defined by $\pi(s', a')$), or the greedy action ($a^* = \text{argmax}_a Q(s', a)$). 
+
+This relates to the *on-policy / off-policy* distinction already seen for MC methods:
+
+* **On-policy** TD learning is called **SARSA** (state-action-reward-state-action). It uses the next action sampled from the policy $\pi(s', a')$ to update the current transition. This selected action could be noted $\pi(s')$ for simplicity. It is required that this next action will actually be performed for the next transition. The policy must be $\epsilon$-soft, for example $\epsilon$-greedy or softmax:
+
+$$
+    Q(s, a) \leftarrow Q(s, a) + \alpha (r(s, a, s') + \gamma \, Q(s', \pi(s')) - Q(s, a))
+$$
+
+:::{.callout-note icon="false"}
+## SARSA
+
+**while** True:
+
+* Start from an initial state $s_0$ and select $a_0$ using the current policy $\pi$.
+
+* **foreach** step $t$ of the episode:
+
+    * Apply $a_{t}$, observe $r_{t+1}$ and $s_{t+1}$.
+
+    * Select $a_{t+1}$ using the current **stochastic** policy $\pi$.
+
+    * Update the action-value function of $(s_t, a_t)$:
+
+    $$ Q(s_t, a_t) = Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, Q(s_{t+1}, a_{t+1})  - Q(s_t, a_t)) $$
+
+    * Improve the stochastic policy, e.g:
+
+    $$
+        \pi(s_t, a) = \begin{cases}
+                        1 - \epsilon \; \text{if} \; a = \text{argmax} \, Q(s_t, a) \\
+                        \frac{\epsilon}{|\mathcal{A}(s_t) -1|} \; \text{otherwise.} \\
+                        \end{cases}
+    $$
+
+    * **if** $s_{t+1}$ is terminal: **break**
 :::
 
 
-* TD learns from experience in a fully incremental manner. It does not need to wait until the end of an episode. It is therefore possible to learn continuing tasks. 
-
-
-# Bias-variance trade-off
-
-* The **TD error** is used to evaluate the policy:
+* **Off-policy** TD learning is called **Q-learning** [@Watkins1989]. The greedy action in the next state (the one with the highest Q-value) is used to update the current transition. It does not mean that the greedy action will actually have to be selected for the next transition. The learned policy can therefore also be deterministic:
 
 $$
-    V(s_t) \leftarrow V(s_t) + \alpha \, (r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)) = V(s_t) + \alpha \, \delta_t
+    Q(s, a) \leftarrow Q(s, a) + \alpha (r(s, a, s') + \gamma \, \max_{a'} Q(s', a') - Q(s, a))
 $$
 
-* If $\alpha$ is small enough, the estimates converge to:
+:::{.callout-note icon="false"}
+**while** True:
 
-$$V^\pi(s) = \mathbb{E}_\pi [r(s, a, s') + \gamma \, V^\pi(s')]$$
+* Start from an initial state $s_0$.
 
-::: {.columns}
-::: {.column width=60%}
+* **foreach** step $t$ of the episode:
 
+    * Select $a_{t}$ using the behavior policy $b$ (e.g. derived from $\pi$).
 
-* By using an **estimate of the return** $R_t$ instead of directly the return as in MC, 
+    * Apply $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
 
-    * we **increase the bias** (estimates are always wrong, especially at the beginning of learning) 
+    * Update the action-value function of $(s_t, a_t)$:
 
-    * but we **reduce the variance**: only $r(s, a, s')$ is stochastic, not the value function $V^\pi$.
+    $$Q(s_t, a_t) = Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, \max_a Q(s_{t+1}, a) - Q(s_t, a_t))$$
 
-* We can therefore expect **less optimal solutions**, but we will also need **less samples**.
-
-    * better **sample efficiency** than MC.
-
-    * worse **convergence** (suboptimal).
-
-
-:::
-::: {.column width=40%}
+    * Improve greedily the learned policy:
+    
+    $$\pi(s_t, a) = \begin{cases}
+                    1\; \text{if} \; a = \text{argmax} \, Q(s_t, a) \\
+                    0 \; \text{otherwise.} \\
+                    \end{cases}
+    $$
 
 
-![](img/biasvariance3.png)
-
-:::
+    * **if** $s_{t+1}$ is terminal: **break**
 :::
 
-# Exploration-exploitation problem
 
+In Q-learning, the behavior policy has to ensure exploration, while this is achieved implicitly by the learned policy in SARSA, as it must be $\epsilon$-soft. An easy way of building a behavior policy based on a deterministic learned policy is $\epsilon$-greedy: the deterministic action $\mu(s_t)$ is chosen with probability 1 - $\epsilon$, the other actions with probability $\epsilon$. In continuous action spaces, additive noise (e.g. Ohrstein-Uhlenbeck) can be added to the action.
 
-* Q-values can be estimated in the same way:
+Alternatively, domain knowledge can be used to create the behavior policy and restrict the search to meaningful actions: compilation of expert moves in games, approximate solutions, etc. Again, the risk is that the behavior policy never explores the actually optimal actions. See Section @sec-offpolicymethods for more details on the difference between on-policy and off-policy methods.
 
-$$
-    Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, Q(s_{t+1}, a_{t+1}) - Q(s_t, a_t))
-$$
-
-* Like for MC, the exploration/exploitation trade-off has to be managed: what is the next action $a_{t+1}$? 
-
-* There are therefore two classes of TD control algorithms:
-
-    * **on-policy** (SARSA)
-
-    * **off-policy** (Q-learning).
-
-
-![Source: UC Berkeley AI course [slides](http://ai.berkeley.edu/lecture_slides.html), [lecture 11](http://ai.berkeley.edu/slides/Lecture%2011%20--%20Reinforcement%20Learning%20II/SP14%20CS188%20Lecture%2011%20--%20Reinforcement%20Learning%20II.pptx)](img/exploration_vs_exploitation.png){width=50%}
-
-# SARSA: On-policy TD control
-
-
-* **SARSA** (state-action-reward-state-action) updates the value of a state-action pair by using the predicted value of the next state-action pair according to the current policy.
-
-::: {.columns}
-::: {.column width=100%}
-
-![](img/rl-sequence.png){width=50%}
-
-:::
-::: {.column width=0%}
-
-:::
-:::
-
-* When arriving in $s_{t+1}$ from $(s_t, a_t)$, we already sample the next action:
-
-$$a_{t+1} \sim \pi(s_{t+1}, a)$$
-
-* We can now update the value of $(s_t, a_t)$:
-
-$$
-    Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, Q(s_{t+1}, a_{t+1}) - Q(s_t, a_t))
-$$
-
-* The next action $a_{t+1}$ will **have to** be executed next: SARSA is **on-policy**. You cannot change your mind and execute another $a_{t+1}$.
-
-* The learned policy must be $\epsilon$-soft (stochastic) to ensure exploration.
-
-* SARSA converges to the optimal policy if $\alpha$ is small enough and if $\epsilon$ (or $\tau$) slowly decreases to 0.
-
-
-
-# SARSA: On-policy TD control
-
-:::{}
-![](img/rl-sequence.png){width=50%}
-:::
-
-* **while** True:
-
-    * Start from an initial state $s_0$ and select $a_0$ using the current policy $\pi$.
-
-    * **foreach** step $t$ of the episode:
-
-        * Apply $a_{t}$, observe $r_{t+1}$ and $s_{t+1}$.
-
-        * Select $a_{t+1}$ using the current **stochastic** policy $\pi$.
-
-        * Update the action-value function of $(s_t, a_t)$:
-
-        $$ Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, Q(s_{t+1}, a_{t+1})  - Q(s_t, a_t)) $$
-
-        * Improve the stochastic policy, e.g:
-
-        $$
-            \pi(s_t, a) = \begin{cases}
-                            1 - \epsilon \; \text{if} \; a = \text{argmax} \, Q(s_t, a) \\
-                            \frac{\epsilon}{|\mathcal{A}(s_t) -1|} \; \text{otherwise.} \\
-                          \end{cases}
-        $$
-
-        * **if** $s_{t+1}$ is terminal: **break**
-
-
-# Q-learning: Off-policy TD control
-
-* SARSA estimates the return using the next action sampled from the learned policy.
-
-$$
-    R_t \approx r_{t+1} + \gamma \,  Q^\pi(s_{t+1}, a_{t+1})
-$$
-
-* As the learned policy is stochastic, the Q-value of the next action will have a **high variance**.
-
-![](img/epsilonggreedy-example.png){width=40%}
-
-* The greedy action in the next state, the one with the highest Q-value, will not change from sample to sample: it can provide a more stable (less variance) estimate of the return:
-
-$$
-    R_t \approx r_{t+1} + \gamma \,  \max_a  Q^\pi(s_{t+1}, a_{t+1}) \approx r_{t+1} + \gamma \, \max_a   Q^*(s_{t+1}, a_{t+1})
-$$
-
-* We implicitly use the **Bellman optimality equation**.
-
-# Q-learning: Off-policy TD control
-
-* **Q-learning** approximates the optimal action-value function $Q^*$ independently of the current policy, using the greedy action in the next state.
-
-$$Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, \max_a Q(s_{t+1}, a) - Q(s_t, a_t))$$
-
-* The next action $a_{t+1}$ can be generated by a behavior policy: Q-learning is **off-policy**.
-
-* The learned policy can be deterministic.
-
-* The behavior policy can be an $\epsilon$-soft policy derived from $Q$ or expert knowledge.  
-
-* The behavior policy only needs to visit all state-action pairs during learning to ensure optimality.
-
-# Q-learning: Off-policy TD control
-
-* **while** True:
-
-    * Start from an initial state $s_0$.
-
-    * **foreach** step $t$ of the episode:
-
-        * Select $a_{t}$ using the behavior policy $b$ (e.g. derived from $\pi$).
-
-        * Apply $a_t$, observe $r_{t+1}$ and $s_{t+1}$.
-
-        * Update the action-value function of $(s_t, a_t)$:
-
-        $$Q(s_t, a_t) \leftarrow Q(s_t, a_t) + \alpha \, (r_{t+1} + \gamma \, \max_a Q(s_{t+1}, a) - Q(s_t, a_t))$$
-
-        * Improve greedily the learned policy:
-        
-        $$\pi(s_t, a) = \begin{cases}
-                        1\; \text{if} \; a = \text{argmax} \, Q(s_t, a) \\
-                        0 \; \text{otherwise.} \\
-                      \end{cases}
-        $$
-
-
-        * **if** $s_{t+1}$ is terminal: **break**
-
-# No need for importance sampling in Q-learning
-
-* In off-policy Monte Carlo, Q-values are estimated using the return of the rest of the episode on average:
-
-$$Q^\pi(s, a) = \mathbb{E}_{\tau \sim \rho_b}[\rho_{0:T-1} \, R(\tau) | s_0 = s, a_0=a]$$
-
-* As the rest of the episode is generated by $b$, we need to correct the returns using the importance sampling weight.
-
-* In Q-learning, Q-values are estimated using other estimates:
+Note that, despite being off-policy, Q-learning does not necessitate importance sampling, as the update rule does not depend on the behavior policy:
 
 $$
     Q^\pi(s, a) = \mathbb{E}_{s_t \sim \rho_b, a_t \sim b}[ r_{t+1} + \gamma \, \max_a Q^\pi(s_{t+1}, a) | s_t = s, a_t=a]
 $$
 
-* As we only sample **transitions** using $b$ and not episodes, there is no need to correct the returns:
+but:
 
-    * The returns use estimates $Q^\pi$, which depend on $\pi$ and not $b$.
+$$
+    Q^\pi(s, a) \leftarrow Q^\pi(s, a) + \alpha (r(s, a, s') + \gamma \, \max_{a'} Q^\pi(s', a') - Q^\pi(s, a))
+$$
 
-    * The immediate reward $r_{t+1}$ is stochastic, but is the same whether you sample $a_t$ from $\pi$ or from $b$.
-
-
-<!--
-# Q-learning: Gridworld example
-
-::: {.columns}
-::: {.column width=50%}
-
-
-![](img/gridworld.png)
-
-:::
-::: {.column width=50%}
-
-
-* **States:** position of the red rectangle in the grid.
-
-* **Action:** left, right, up, down.
-
-* **Rewards:** 
-
-    * +100 for the blue circle
-
-    * -100 for the green triangles
-
-    * -1 otherwise.
-
-* You will implement this in the exercises.
-
-:::
-:::
--->
-
-
-# Temporal Difference learning
-
-* **Temporal Difference** allow to learn Q-values from single transitions instead of complete episodes.
-
-* MC methods can only be applied to episodic problems, while TD works for continuing tasks.
-
-* MC and TD methods are **model-free**: you do not need to know anything about the environment ($p(s' |s, a)$ and $r(s, a, s')$) to learn.
-
-* The **exploration-exploitation** dilemma must be dealt with:
-
-    * **On-policy** TD (SARSA) follows the learned stochastic policy.
-
-    $$
-        Q(s, a) \leftarrow Q(s, a) + \alpha \, (r(s, a, s') + \gamma \, Q(s', a') - Q(s, a))
-    $$
-
-    * **Off-policy** TD (Q-learning) follows a behavior policy and learns a deterministic policy.
-
-    $$
-        Q(s, a) \leftarrow Q(s, a) + \alpha \, (r(s, a, s') + \gamma \, \max_a Q(s', a) - Q(s, a))
-    $$
-
-* TD uses **bootstrapping** like DP: it uses other estimates to update one estimate. 
-
-* Q-learning is the go-to method in tabular RL.
-
-
-# Optimal control with Q-learning
-
-
-{{< youtube XiigTGKZfks >}}
+As we only sample **transitions** using $b$ and not episodes, there is no need to correct the returns.
+The returns use estimates $Q^\pi$, which depend on $\pi$ and not $b$. The immediate reward $r_{t+1}$ is stochastic, but is the same whether you sample $a_t$ from $\pi$ or from $b$.
 
 
 
-# 2 - Actor-critic methods
+## Actor-critic methods
 
-# Actor-critic methods
-
-* The TD error after each transition $(s_t, a_t, r_{t+1}, s_{t+1})$:
+The TD error after each transition $(s_t, a_t, r_{t+1}, s_{t+1})$:
 
 $$ \delta_t = r_{t+1} + \gamma V(s_{t+1}) - V(s_t)$$
 
 tells us how good the action $a_t$ was compared to our expectation $V(s_t)$.
 
-* When the advantage $\delta_t > 0$, this means that the action lead to a better reward or a better state than what was expected by $V(s_t)$, which is a **good surprise**, so the action should be reinforced (selected again) and the value of that state increased.
-
-* When $\delta_t < 0$, this means that the previous estimation of $(s_t, a_t)$ was too high (**bad surprise**), so the action should be avoided in the future and the value of the state reduced.
-
-
-![Source: <https://www.freecodecamp.org/news/an-intro-to-advantage-actor-critic-methods-lets-play-sonic-the-hedgehog-86d6240171d/>](img/actor-critic-example.png){width=50%}
+When the advantage $\delta_t > 0$, this means that the action lead to a better reward or a better state than what was expected by $V(s_t)$, which is a **good surprise**, so the action should be reinforced (selected again) and the value of that state increased. When $\delta_t < 0$, this means that the previous estimation of $(s_t, a_t)$ was too high (**bad surprise**), so the action should be avoided in the future and the value of the state reduced.
 
 
 
-# Actor-critic methods
+![Actor-critic architecture. Source: @Sutton1998.](img/actorcritic.png){#fig-actorcritic width=60%}
 
-::: {.columns}
-::: {.column width=50%}
+Actor-critic methods are TD methods that have a separate memory structure to explicitly represent the policy and the value function. The policy $\pi$ is implemented by the **actor**, because it is used to select actions.
+The estimated values $V(s)$ are implemented by the **critic**, because it criticizes the actions made by the actor.
 
-
-![](img/actorcritic.png){width=60%}
-
-:::
-::: {.column width=50%}
-
-
-* Actor-critic methods are TD methods that have a separate memory structure to explicitly represent the policy and the value function.
-
-* The policy $\pi$ is implemented by the **actor**, because it is used to select actions.
-
-* The estimated values $V(s)$ are implemented by the **critic**, because it criticizes the actions made by the actor.
-
-:::
-:::
-
-
-* The critic computes the **TD error** or **1-step advantage**:
+The critic computes the **TD error** or **1-step advantage**:
 
 $$\delta_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)$$
 
-* This scalar signal is the output of the critic and drives learning in both the actor and the critic.
+This scalar signal is the output of the critic and drives learning in both the actor and the critic.
+The critic is updated using this scalar signal:
 
+$$ 
+    V(s_t) \leftarrow V(s_t) + \alpha \, \delta_t
+$$
 
-# Actor-critic methods
-
-::: {.columns}
-::: {.column width=30%}
-
-
-![](img/actorcritic.png)
-
-:::
-::: {.column width=70%}
-
-
-
-* TD error after each transition:
-
-$$ \delta_t = r_{t+1} + \gamma V(s_{t+1}) - V(s_t)$$
-
-* The critic is updated using this scalar signal:
-
-$$ V(s_t) \leftarrow V(s_t) + \alpha \, \delta_t$$
-
-* The actor is updated according to this TD error signal. For example a softmax actor over preferences:
-
-
-:::
-:::
+The actor is updated according to this TD error signal. For example a softmax actor over preferences:
 
 $$
 \begin{cases}
 p(s_t, a_t) \leftarrow p(s_t, a_t) + \beta \, \delta_t \\
 \\
-\pi(s, a) = \dfrac{\exp{p(s, a)}}{\sum_b \exp{p(s, b)}} \\
+\pi(s, a) = \frac{\exp{p(s, a)}}{\sum_b \exp{p(s, b)}} \\
 \end{cases}
 $$
 
 
+ When $\delta_t >0$, the preference is increased, so the probability of selecting it again increases.
+When $\delta_t <0$, the preference is decreased, so the probability of selecting it again decreases.
 
-* When $\delta_t >0$, the preference is increased, so the probability of selecting it again increases.
-
-* When $\delta_t <0$, the preference is decreased, so the probability of selecting it again decreases.
-
-
-# Actor-critic algorithm with preferences
+:::{.callout-note icon="false"}
+## Actor-critic algorithm with preferences
 
 * Start in $s_0$. Initialize the preferences $p(s,a)$ for each state action pair and the critic $V(s)$ for each state.
 
@@ -522,267 +248,128 @@ $$
     $$
         V(s_t) \leftarrow V(s_t) + \alpha \, \delta_t
     $$
-
-
-
-# Actor-critic methods
-
-::: {.columns}
-::: {.column width=60%}
-
-
-* The advantage of the separation between the actor and the critic is that now the actor can take any form (preferences, linear approximation, deep networks).
-
-* It requires minimal computation in order to select the actions, in particular when the action space is huge or even continuous.
-
-* It can learn stochastic policies, which is particularly useful in non-Markov problems.
-
-
-:::
-::: {.column width=34%}
-
-![](img/actorcritic-perceptron.jpg)
-
-:::
 :::
 
 
-* **It is obligatory to learn on-policy:** 
-
-    * the critic must evaluate the actions taken by the current actor.
-    
-    * the actor must learn from the current critic, not "old" V-values.
+The advantage of the separation between the actor and the critic is that now the actor can take any form (preferences, linear approximation, deep networks).
+It requires minimal computation in order to select the actions, in particular when the action space is huge or even continuous.
+It can learn stochastic policies, which is particularly useful in non-Markov problems.
 
 
-# 3 - Eligibility traces and advantage estimation
-
-# Bias-variance trade-off
-
-::: {.columns}
-::: {.column width=50%}
+However, **it is obligatory to learn on-policy:** the critic must evaluate the actions taken by the current actor, and the actor must learn from the current critic, not "old" V-values.
 
 
-![](img/biasvariance.png)
-
-:::
-::: {.column width=50%}
-
-
-* MC has **high variance, zero bias**:
-
-    * Good convergence properties. We are more likely to find the optimal policy.
-
-    * Not very sensitive to initial estimates.
-
-    * Very simple to understand and use.
-
-    * Needs a lot of transitions to converge.
-
-* TD has **low variance, some bias**:
-    
-    * More **sample efficient** than MC.
-    
-    * TD(0) converges to $V^\pi(s)$ (but not always with function approximation). 
-    
-    * The bias implies that the policy might be suboptimal.
-    
-    * More sensitive to initial values (bootstrapping).
-
-:::
-:::
+Classical TD learning only learn a value function ($V^\pi(s)$ or $Q^\pi(s, a)$): these methods are called **value-based** methods. Actor-critic architectures are particularly important in **policy search** methods.
 
 
 
-# Drawback of learning from single transitions
 
-![](img/gridworld-lambda.png){width=60%}
+## Advantage estimation
 
-* When the reward function is sparse (e.g. only at the end of a game), only the last action, leading to that reward, will be updated the first time in TD.
+
+### n-step advantages
+
+![Bias-variance trade-off. Source: <https://www.machinelearningplus.com/machine-learning/bias-variance-tradeoff/>](img/biasvariance3.png){#fig-biasvariance width=80%}
+
+
+MC methods have **high variance, low bias**: Return estimates are correct on average, as we use real rewards from the environment, but each of them individually is wrong, because of the stochasticity of the policy/environment. 
 
 $$
-    Q(s, a) \leftarrow Q(s, a) + \alpha \, (r(s, a, s') + \gamma \, \max_a Q(s', a) - Q(s, a))
+    R_t^\text{MC} = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}
 $$
 
-* The previous actions, which were equally important in obtaining the reward, will only be updated the next time they are visited.
+The small bias ensures good convergence properties, as we are more likely to find the optimal policy with correct estimates. The high variance means that we will need many samples to converge.
+The updates are not very sensitive to initial estimates.
 
-* This makes learning very slow: if the path to the reward has $n$ steps, you will need to repeat the same episode at least $n$ times to learn the Q-value of the first action. 
+On the other hand, TD has **low variance, high bias**, as the target returns contain mostly estimates. 
 
-# n-step advantage
+$$
+    R_t^\text{TD} = r_{t+1} + \gamma \, V^\pi(s_{t+1})
+$$
 
-::: {.columns}
-::: {.column width=40%}
+The only stochasticity comes from the immediate rewards, which is low, so the targets will not vary much during learning. But because they use other estimates, which are initially wrong, they will always be off. These wrong updates can, more often than not, lead to suboptimal policies. However, convergence will be much faster than with MC methods.
 
-
-![](img/nstep.png){width=80%}
-
-:::
-::: {.column width=60%}
-
-
-* Optimally, we would like a trade-off between: 
-
-    * TD (only one state/action is updated each time, small variance but significant bias)
-
-    * Monte Carlo (all states/actions in an episode are updated, no bias but huge variance).
-
-* In **n-step TD prediction**, the next $n$ rewards are used to estimate the return, the rest is approximated.
-
-:::
-:::
-
-
-* The **n-step return** is the discounted sum of the $n$ next rewards is computed as in MC plus the predicted value at step $t+n$ which replaces the rest as in TD.
+In order to control the **bias-variance trade-off**, we would like an estimator for the return with intermediate properties between MC and TD. This is what the **n-step return** offers:
 
 $$
     R^n_t = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \,  V(s_{t+n}) 
 $$
 
-* We can update the value of the state with this n-step return:
+The n-step return uses the next $n$ real rewards, and completes the rest of the sequence with the value of the state reached $n$ steps in the future. Because it uses more real rewards than TD, its bias is smaller, while its variance is lower than MC.
 
-$$
-    V(s_t) \leftarrow V(s_t) + \alpha \, (R^n_t - V (s_t))
-$$
+![n-step returns define a trade-off between TD and MC. Source: @Sutton1998](img/nstep.png){#fig-nstep width=80%}
 
 
-
-# n-step advantage
-
-::: {.columns}
-::: {.column width=50%}
-
-
-* The **n-step advantage** at time $t$ is:
+The **n-step advantage** at time $t$ is defined as the difference between the n-step return and the current estimate:
 
 $$
 A^n_t = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \,  V(s_{t+n}) - V (s_t)
 $$
 
-* It is easy to check that the **TD error** is the 1-step advantage:
+It is easy to check that the **TD error** is the 1-step advantage:
 
 $$
     \delta_t = A^1_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)
 $$
 
 
+n-step advantages are going to play an important role in deep RL, as the right choice of $n$ will allow us to control the **bias-variance trade-off**: smaller values of $n$ decrease the variance (smaller sample complexity) but may lead to suboptimal policies, while higher values of $n$ converge to better policies, at the cost of necessitating more samples. 
 
 
-:::
-::: {.column width=50%}
+### Eligibility traces
+
+The main drawback of TD learning is that learning can be slow, especially when the problem provides **sparse rewards** (as opposed to dense rewards). For example in a game like chess, a reward is given only at the end of a game (+1 for winning, -1 for losing). All other actions receive a reward of 0, although they are as important as the last one in order to win.
+
+![Principle of eligibility traces applied to the Gridworld problem using SARSA($\lambda$). Source: @Sutton1998.](img/gridworld-lambda.png){#fig-eligibilitytraces width=80%}
+
+Imagine you initialize all Q-values to 0 and apply Q-learning to the Gridworld problem of @fig-eligibilitytraces. During the first episode, all actions but the last one will receive a reward of 0 and arrive in a state where the greedy action has a value $Q^\pi(s', a')$ of 0 (initially), so the TD error $\delta$ is 0 and their Q-value will not change. Only the very last action will receive a non-zero reward and update its value slightly (because of the learning rate $\alpha$). 
+
+When this episode is performed again, the last action will again be updated, but also the one just before: $Q^\pi(s', a')$ is now different from 0 for this action, so the TD error is now different from 0. It is straightforward to see that if the episode has a length of 100 moves, the agent will need at least 100 episodes to "backpropagate" the final sparse reward to the first action of the episode. In practice, this is even worse: the learning rate $\alpha$ and the discount rate $\gamma$ will slow learning down even more. 
+MC methods suffer less from this problem, as the first action of the episode would be updated using the actual return, which contains the final reward (although it is discounted by $\gamma$).
 
 
-![Credit: S. Levine](img/nstep-principle.png)
-
-:::
-:::
+**Eligibility traces** can be seen a trick to mix the advantages of MC (faster updates) with the ones of TD (online learning, smaller variance). The idea is that the TD error at time $t$ ($\delta_t$) will be used not only to update the action taken at time $t$ ($\Delta Q(s_t, a_t) = \alpha \, \delta_t$), but also all the preceding actions, which are also responsible for the success or failure of the action taken at time $t$. 
 
 
+![The decaying factor $\lambda$ controls how much future TD errors influence learning at the current time step. Source: @Sutton1998.](img/eligibility-forward-decay.png){#fig-eligilitylambdadecay}
 
-* As you use more "real" rewards, you **reduce the bias** of Q-learning.
-
-* As you use estimates for the rest of the episode, you **reduce the variance** of MC methods.
-
-* But how to choose $n$?
+A parameter $\lambda$ between 0 and 1 (decaying factor) controls how far back in time a single TD error influences past actions. This is important when the policy is mostly exploratory: initial actions may be mostly random and finally find the the reward by chance. They should learn less from the reward than the last one, otherwise they would be systematically reproduced. 
+There are many possible implementations of eligibility traces (Watkin's, Peng, Tree Backup, etc. See the Chapter 12 of @Sutton2017). Generally, one distinguished a forward and a backward view of eligibility traces.
 
 
-# Eligibility traces : forward view
-
-::: {.columns}
-::: {.column width=50%}
-
-* One solution is to **average** the n-step returns, using a discount factor $\lambda$ :
-
-$$R^\lambda_t = (1  - \lambda) \, \sum_{n=1}^\infty \lambda^{n-1} \, R^n_t$$
-
-
-* The term $1- \lambda$ is there to ensure that the coefficients $\lambda^{n-1}$ sum to one.
-
-$$\sum_{n=1}^\infty \lambda^{n-1} = \dfrac{1}{1 - \lambda}$$
-
-
-* Each reward $r_{t+k+1}$ will count multiple times in the $\lambda$-return. Distant rewards are discounted by $\lambda^k$ in addition to $\gamma^k$.
-
-* Large n-step returns (MC) should not have as much importance as small ones (TD), as they have a high variance.
-
-:::
-::: {.column width=50%}
-
-![](img/eligibility-forward.png){width=80%}
-
-![](img/eligibility-forward-decay.png)
-
-
-:::
-:::
-
-
-
-
-# Eligibility traces : forward view
-
-* To understand the role of $\lambda$, let's split the infinite sum w.r.t the end of the episode at time $T$. n-step returns with $n \geq T$ all have a MC return of $R_t$:
-
-$$R^\lambda_t = (1  - \lambda) \, \sum_{n=1}^{T-t-1} \lambda^{n-1} \, R^n_t + \lambda^{T-t-1} \, R_t$$
-
-* $\lambda$ controls the bias-variance trade-off:
-
-    * If $\lambda=0$, the $\lambda$-return is equal to $R^1_t = r_{t+1} + \gamma \, V(s_{t+1})$, i.e. TD: high bias, low variance.
-
-    * If $\lambda=1$, the $\lambda$-return is equal to $R_t = \sum_{k=0}^{\infty} \gamma^{k} \, r_{t+k+1}$, i.e. MC: low bias, high variance.
-
-* This **forward view** of eligibility traces implies to look at all future rewards until the end of the episode to perform a value update. This prevents online learning using single transitions.
-
-![](img/eligibility-forward-view.png){width=40%}
-
-
-
-# Eligibility traces : backward view
-
-::: {.columns}
-::: {.column width=40%}
-
-![](img/eligibility-backwards.png)
-
-:::
-::: {.column width=60%}
-
-![](img/traces.png)
-
-:::
-:::
-
-::: {.columns}
-::: {.column width=50%}
-
-* Another view on eligibility traces is that the  **TD reward prediction error** at time $t$ is sent backwards in time:
+* The **forward view** considers that one transition $(s_t, a_t)$ gathers the TD errors made at future time steps $t'$ and discounts them with the parameter $\lambda$:
 
 $$
- \delta_t = r_{t+1} + \gamma V(s_{t+1}) - V(s_t)
+    R_t^\lambda =  \sum_{k=0}^T (\gamma \lambda)^{k} \delta_{t+k}
 $$
 
-* Every state $s$ previously visited during the episode will be updated proportionally to the current TD error and an **eligibility trace** $e_t(s)$:
+From this equation, $\gamma$ and $\lambda$ seem to play a relatively similar role, but remember that $\gamma$ is also used inside the TD error, so they control different aspects of learning. The drawback of this approach is that the future transitions and their respective TD errors must be known when updating the transition, so this prevents online learning (the episode must be terminated to apply the updates, like in MC).
+
+![Forward view of the eligibility trace. Source: @Sutton1998.](img/eligibility-forward-view.png){#fig-eligibilityforward}
+
+
+* The **backward view** considers that the TD error made at time $t$ is sent backwards in time to all transitions previously executed. The easiest way to implement this is to update an eligibility trace $e(s,a)$ for each possible transition, which is incremented every time a transition is visited and otherwise decays exponentially with a speed controlled by $\lambda$:
 
 $$
-    V(s) \leftarrow V(s) + \alpha \, \delta_t \, e_t(s)
+    e(s, a) = \begin{cases} e(s, a) + 1 \quad \text{if} \quad s=s_t \quad \text{and} \quad a=a_t \\
+                            \lambda \, e(s, a) \quad \text{otherwise.}
+              \end{cases}
 $$
 
-::: 
-::: {.column width=50%}
-
-* The eligibility trace defines since how long the state was visited:
+The Q-value of **all** transitions $(s, a)$ (not only the one just executed) is then updated proportionally to the corresponding trace and the current TD error:
 
 $$
-    e_t(s) = \begin{cases}
-                \gamma \, \lambda \, e_{t-1}(s) \qquad\qquad \text{if} \quad s \neq s_t \\
-                e_{t-1}(s) + 1 \qquad \text{if} \quad s = s_t \\
-            \end{cases}
+    Q(s, a) \leftarrow  Q(s, a) + \alpha \, e(s, a) \, \delta_{t} \quad \forall s, a
 $$
 
-* $\lambda$ defines how important is a future TD error for the current state.
+![Backward view of the eligibility trace. Source: @Sutton1998.](img/eligibility-backwards.png){#fig-eligibilitybackwards}
 
-:::
-:::
+The forward and backward implementations are equivalent: the first requires to know the future, the second requires to update many transitions at each time step. The best solution will depend on the complexity of the problem.
 
-# TD($\lambda$) algorithm: policy evaluation
+TD learning, SARSA and Q-learning can all be efficiently extended using eligibility traces. This gives the algorithms TD($\lambda$), SARSA($\lambda$) and Q($\lambda$), which can learn much faster than their 1-step equivalent, at the cost of more computations.
+
+:::{.callout-note icon="false"}
+## TD($\lambda$) algorithm: policy evaluation
 
 * **foreach** step $t$ of the episode:
 
@@ -791,7 +378,7 @@ $$
     * Compute the TD error in $s_t$:
 
     $$
-        \delta_t = r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)
+        \delta_t = r_{t+1} + \gamma \, V_k(s_{t+1}) - V_k(s_t)
     $$
 
     * Increment the trace of $s_t$:
@@ -805,7 +392,7 @@ $$
         * Update the state value function:
 
         $$
-            V(s) \leftarrow V(s) + \alpha \, \delta_t \, e_t(s)
+            V_{k+1}(s) = V_k(s) + \alpha \, \delta_t \, e_t(s)
         $$
 
         * Decay the eligibility trace:
@@ -815,21 +402,55 @@ $$
         $$
 
     * **if** $s_{t+1}$ is terminal: **break**
+:::
 
 
-# Eligibility traces
+### Generalized Advantage Estimation (GAE) {#sec-GAE}
 
-![](img/gridworld-lambda.png){width=70%}
 
-* The backward view of eligibility traces can be applied on single transitions, given we know the history of visited states and maintain a trace for each of them.
+Let's recall the n-step advantage:
 
-* Eligibility traces are a very useful way to speed learning up in TD methods and control the bias/variance trade-off.
+$$
+    A^{n}_t = \sum_{k=0}^{n-1} \gamma^{k} \, r_{t+k+1} + \gamma^n \, V^\pi(s_{t+n+1}) - V^\pi(s_t)
+$$
 
-* This modification can be applied to all TD methods: TD($\lambda$) for states, SARSA($\lambda$) and Q($\lambda$) for actions.
+It is easy to show recursively that it depends on the TD error $\delta_t = r_{t+1} + \gamma \, V^\pi(s_{t+1}) - V^\pi(s_t)$ of the $n$ next steps:
 
-* The main drawback is that we need to keep a trace for ALL possible state-action pairs: memory consumption. Clever programming can limit this issue.
+$$
+    A^{n}_t = \sum_{l=0}^{n-1} \gamma^l \, \delta_{t+l}
+$$
 
-* The value of $\lambda$ has to be carefully chosen for the problem: perhaps initial actions are random and should not be reinforced.
+::: {.callout-note icon="false"}
+## Proof with $n=2$:
 
-* If your problem is not strictly Markov (POMDP), eligibility traces can help as they update the history!
+$$\begin{aligned}
+A^2_t &= r_{t+1} + \gamma \, r_{t+2} + \gamma^2 \, V(s_{t+2}) - V(s_{t}) \\
+&\\
+&= (r_{t+1} - V(s_t)) + \gamma \, (r_{t+2} + \gamma \, V(s_{t+2}) ) \\
+&\\
+&= (r_{t+1} + \gamma \, V(s_{t+1}) - V(s_t)) + \gamma \, (r_{t+2} + \gamma \, V(s_{t+2}) - V(s_{t+1})) \\
+&\\
+&= \delta_t + \gamma \, \delta_{t+1}
+\end{aligned}
+$$
+:::
 
+In other words, the prediction error over $n$ steps is the (discounted) sum of the prediction errors between two successive steps. 
+Now, what is the optimal value of $n$? GAE decides not to choose and to simply average all n-step advantages and to weight them with a discount parameter $\lambda$. 
+
+This defines the **Generalized Advantage Estimator** $A^{\text{GAE}(\gamma, \lambda)}_t$:
+
+$$
+    A^{\text{GAE}(\gamma, \lambda)}_t = (1-\lambda) \, \sum_{l=0}^\infty \lambda^l A^l_t = \sum_{l=0}^\infty (\gamma \lambda)^l \delta_{t+l}
+$$
+
+The GAE is simply a forward eligibility trace over distant n-step advantages: the 1-step advantage is more important the the 1000-step advantage (too much variance).
+
+* When $\lambda=0$, we have $A^{\text{GAE}(\gamma, 0)}_t = A^{0}_t = \delta_t$, i.e. the TD advantage (high bias, low variance). 
+* When $\lambda=1$, we have (at the limit) $A^{\text{GAE}(\gamma, 1)}_t = R_t$, i.e. the MC advantage (low bias, high variance). 
+
+Choosing the right value of $\lambda$ between 0 and 1 allows to control the bias/variance trade-off.
+
+$\gamma$ and $\lambda$ play different roles in GAE: $\gamma$ determines the scale or horizon of the value functions: how much future rewards rewards are to be taken into account. The higher $\gamma <1$, the smaller the bias, but the higher the variance. Empirically, @Schulman2015a found that small $\lambda$ values introduce less bias than $\gamma$, so $\lambda$ can be chosen smaller than $\gamma$ (which is typically 0.99).
+
+In practice, GAE leads to a better estimation than n-step advantages, but is more computationally expensive. It is used in particular in PPO (Section @sec-PPO).
