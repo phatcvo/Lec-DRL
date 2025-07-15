@@ -370,7 +370,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="lectures">Lectures</h2>
 <section id="introduction" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="introduction">0 - Introduction</h4>
-<div id="1367aa7a" class="cell" data-execution_count="2">
+<div id="10d8ffcd" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="2">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -396,7 +396,7 @@ Introduction to the main concepts of reinforcement learning and showcasing of th
 </section>
 <section id="tabular-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="tabular-rl">1 - Tabular RL</h4>
-<div id="5ca02d3e" class="cell" data-execution_count="3">
+<div id="e2f68ef3" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="3">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -447,7 +447,7 @@ Quick overview of the main neural network architectures needed for the rest of t
 </section>
 <section id="model-free-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="model-free-rl">2 - Model-free RL</h4>
-<div id="4b5a40e3" class="cell" data-execution_count="4">
+<div id="b6aa03cd" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="4">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -492,14 +492,9 @@ PPO (Schulman et al., 2017) allows stable learning by estimating trust regions f
 <td><a href="slides/2.6-PPO.html" target="_blank">Slide</a>, <a href="posts/2.6-PPO.html" target="_blank">Book</a></td>
 </tr>
 <tr class="odd">
-<td><strong>2.7 - ACER: Actor-Critic with Experience Replay</strong><br>
-The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.</td>
-<td><a href="slides/2.7-ACER.html" target="_blank">Slide</a>, <a href="posts/2.7-ACER.html" target="_blank">Book</a></td>
-</tr>
-<tr class="even">
 <td><strong>2.8 - SAC: Soft Actor-Critic</strong><br>
 Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.</td>
-<td><a href="slides/2.8-EntropyRL.html" target="_blank">Slide</a>, <a href="posts/2.8-EntropyRL.html" target="_blank">Book</a></td>
+<td><a href="slides/2.8-SAC.html" target="_blank">Slide</a>, <a href="posts/2.8-SAC.html" target="_blank">Book</a></td>
 </tr>
 </tbody>
 </table>
@@ -508,7 +503,7 @@ Maximum Entropy RL modifies the RL objective by learning optimal policies that a
 </section>
 <section id="model-based-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="model-based-rl">3 - Model-based RL</h4>
-<div id="f3a5454e" class="cell" data-execution_count="5">
+<div id="a9b0f52e" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="5">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -533,14 +528,6 @@ Learning a world model from data and planning the optimal sequence of actions us
 <td><a href="slides/3.2-LearnedModels.html" target="_blank">Slide</a>, <a href="posts/3.2-LearnedModels.html" target="_blank">Book</a></td>
 </tr>
 <tr class="odd">
-<td><strong>3.3 - Planning (MPC, TDM)</strong>\</td>
-<td></td>
-</tr>
-<tr class="even">
-<td>Model-based learning is not only used to augment MF methods with imaginary rollouts.</td>
-<td><a href="slides/3.3-Planning.html" target="_blank">Slide</a>, <a href="posts/3.3-Planning.html" target="_blank">Book</a></td>
-</tr>
-<tr class="odd">
 <td><strong>3.4 - World models, Dreamer</strong><br>
 The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.</td>
 <td><a href="slides/3.4-WorldModels.html" target="_blank">Slide</a>, <a href="posts/3.4-WorldModels.html" target="_blank">Book</a></td>
@@ -557,7 +544,7 @@ AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of
 </section>
 <section id="outlook" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="outlook">4 - Outlook</h4>
-<div id="effcec25" class="cell" data-execution_count="6">
+<div id="4cb6b51a" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="6">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -1180,67 +1167,63 @@ Current RL research investigates many different directions: inverse RL, intrinsi
 <span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a><span class="st">DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics."""</span>,</span>
 <span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>    <span class="st">'2.6-PPO'</span>: <span class="st">"""**2.6 - PPO: Proximal Policy Optimization**</span><span class="ch">\\</span></span>
 <span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="st">PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates."""</span>,</span>
-<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>    <span class="st">'2.7-ACER'</span>: <span class="st">"""**2.7 - ACER: Actor-Critic with Experience Replay**</span><span class="ch">\\</span></span>
-<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="st">The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy."""</span>,</span>
-<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>    <span class="st">'2.8-EntropyRL'</span>: <span class="st">"""**2.8 - SAC: Soft Actor-Critic**</span><span class="ch">\\</span></span>
-<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a><span class="st">Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL."""</span>,</span>
-<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
-<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>    <span class="st">'2.8-SAC'</span>: <span class="st">"""**2.8 - SAC: Soft Actor-Critic**</span><span class="ch">\\</span></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="st">Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL."""</span>,</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a><span class="fu">#### 3 - Model-based RL {.lecture-section}</span></span>
 <span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a><span class="fu">#### 3 - Model-based RL {.lecture-section}</span></span>
-<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>lecs <span class="op">=</span> {</span>
-<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.1-ModelBased'</span>: <span class="st">"""**3.1 - Model-based RL**</span><span class="ch">\\</span></span>
-<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a><span class="st">Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. """</span>,</span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.2-LearnedModels'</span>: <span class="st">"""**3.2 - Planning with learned World models**</span><span class="ch">\\</span></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a><span class="st">Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity."""</span>,</span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.3-Planning'</span>: <span class="st">"""**3.3 - Planning (MPC, TDM)**</span><span class="ch">\\</span><span class="st">   </span></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="st">Model-based learning is not only used to augment MF methods with imaginary rollouts."""</span>,</span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.4-WorldModels'</span>: <span class="st">"""**3.4 - World models, Dreamer**</span><span class="ch">\\</span></span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="st">The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks."""</span>,</span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.5-AlphaGo'</span>: <span class="st">"""**3.5 - AlphaGo**</span><span class="ch">\\</span></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="st">AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search)."""</span>,</span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>lecs <span class="op">=</span> {</span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.1-ModelBased'</span>: <span class="st">"""**3.1 - Model-based RL**</span><span class="ch">\\</span></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a><span class="st">Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. """</span>,</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.2-LearnedModels'</span>: <span class="st">"""**3.2 - Planning with learned World models**</span><span class="ch">\\</span></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a><span class="st">Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity."""</span>,</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.4-WorldModels'</span>: <span class="st">"""**3.4 - World models, Dreamer**</span><span class="ch">\\</span></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a><span class="st">The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks."""</span>,</span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>    <span class="st">'3.5-AlphaGo'</span>: <span class="st">"""**3.5 - AlphaGo**</span><span class="ch">\\</span></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="st">AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search)."""</span>,</span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a><span class="fu">#### 4 - Outlook {.lecture-section}</span></span>
 <span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a><span class="fu">#### 4 - Outlook {.lecture-section}</span></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>lecs <span class="op">=</span> {</span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>    <span class="st">'4.1-Outlook'</span>: <span class="st">"""**5.1 - Outlook**</span><span class="ch">\\</span></span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a><span class="st">Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc."""</span>,</span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a><span class="in">```{python}</span></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>lecs <span class="op">=</span> {</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>    <span class="st">'4.1-Outlook'</span>: <span class="st">"""**5.1 - Outlook**</span><span class="ch">\\</span></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a><span class="st">Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc."""</span>,</span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>table_lecture(lecs)</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recommended readings</span></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Richard Sutton and Andrew Barto (2017). Reinforcement Learning: An Introduction. MIT press. </span>
 <span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a><span class="fu">## Recommended readings</span></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://incompleteideas.net/book/the-book-2nd.html&gt;</span></span>
 <span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Richard Sutton and Andrew Barto (2017). Reinforcement Learning: An Introduction. MIT press. </span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>CS294 course of Sergey Levine at Berkeley. </span>
 <span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://incompleteideas.net/book/the-book-2nd.html&gt;</span></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://rll.berkeley.edu/deeprlcourse/&gt;</span></span>
 <span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>CS294 course of Sergey Levine at Berkeley. </span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Reinforcement Learning course by David Silver at UCL.</span>
 <span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://rll.berkeley.edu/deeprlcourse/&gt;</span></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html&gt;</span></span>
 <span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>Reinforcement Learning course by David Silver at UCL.</span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a><span class="ot">&lt;http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html&gt;</span></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>::: {.course-footer}</span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a>© 2025 Deep Reinforcement Learning Course. This course material is designed to provide comprehensive coverage of modern reinforcement learning techniques.</span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>::: {.course-footer}</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>© 2025 Deep Reinforcement Learning Course. This course material is designed to provide comprehensive coverage of modern reinforcement learning techniques.</span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>:::</span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
