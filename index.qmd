@@ -153,7 +153,7 @@ lecs = {
 DQN (Mnih et al. 2013) was the first successful application of deep networks to the RL problem. It has been applied to Atari video games and started the interest for deep RL methods.""",
     '2.2-DQNvariants': """**2.2 - Beyond DQN**\\
 Various extensions to the DQN algorithms have been proposed in the following years: distributional learning, parameter noise, distributed learning or recurrent architectures.""",
-    '2.3-PG': """**2.3 - PG: Policy Gradient**\\
+    '2.3-PolicyGradient': """**2.3 - PG: Policy Gradient**\\
 Policy gradient methods allow to directly learn the policy without requiring action selection over value functions.""",
     '2.4-ActorCritic': """**2.4 - AC: Actor-Critic**\\
 A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gradient from multiple parallel workers.""",
@@ -181,12 +181,16 @@ lecs = {
 Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. """,
     '3.2-LearnedModels': """**3.2 - Planning with learned World models**\\
 Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.""",
+    '3.3-ImportanceSampling': """**3.3 - Importance Sampling**\\
+Importance sampling allows learning from off-policy data and is fundamental to many modern RL algorithms.""",
     '3.3-Planning': """**3.3 - Planning (MPC, TDM)**\\   
 Model-based learning is not only used to augment MF methods with imaginary rollouts.""",
     '3.4-WorldModels': """**3.4 - World models, Dreamer**\\
 The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.""",
     '3.5-AlphaGo': """**3.5 - AlphaGo**\\
 AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search).""",
+    '3.5-NaturalGradient': """**3.5 - Natural Gradients**\\
+Natural gradient methods provide more stable and efficient optimization for policy gradient algorithms.""",
 }
 table_lecture(lecs)
 ```
