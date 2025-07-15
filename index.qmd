@@ -1,47 +1,12 @@
 ---
 title: "Deep Reinforcement Learning"
-subtitle: "A Comprehensive Course on Modern Reinforcement Learning"
+subtitle: "A comprehensive course covering fundamental concepts and cutting-edge techniques in Deep RL. From basic tabular methods to advanced deep learning approaches."
 echo: false
 toc-title: "Course Contents"
 ---
 
 
-::: {.hero-banner}
-# Welcome to Deep Reinforcement Learning
 
-This comprehensive course covers the fundamental concepts and cutting-edge techniques in Deep Reinforcement Learning (DRL). From basic tabular methods to advanced deep learning approaches, you'll explore the complete landscape of modern RL.
-
-::: {.btn-group}
-[Get Started](#lectures){.btn .btn-primary .btn-lg}
-[View Slides](slides/index.html){.btn .btn-outline-secondary .btn-lg}
-:::
-:::
-
-::: {.features}
-## Course Features
-
-::: {.feature-grid}
-::: {.feature-item}
-### 📚 Comprehensive Content
-Complete coverage from basic concepts to advanced deep RL techniques including DQN, Policy Gradients, Actor-Critic methods, and Model-based RL.
-:::
-
-::: {.feature-item}
-### 🎯 Practical Focus
-Each topic includes both theoretical foundations and practical implementations with real-world examples and applications.
-:::
-
-::: {.feature-item}
-### 📊 Interactive Materials
-Rich multimedia content with slides, detailed explanations, mathematical derivations, and visual illustrations.
-:::
-
-::: {.feature-item}
-### 🔄 Progressive Learning
-Structured curriculum that builds knowledge step-by-step from fundamental concepts to advanced research topics.
-:::
-:::
-:::
 
 ## Lectures
 
