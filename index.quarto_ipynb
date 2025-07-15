@@ -1,0 +1,409 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "78c361c3",
+   "metadata": {},
+   "source": [
+    "---\n",
+    "title: \"Deep Reinforcement Learning\"\n",
+    "subtitle: \"A Comprehensive Course on Modern Reinforcement Learning\"\n",
+    "author: \"\"\n",
+    "date: \"\"\n",
+    "echo: false\n",
+    "format:\n",
+    "  html:\n",
+    "    theme: cosmo\n",
+    "    css: [assets/custom.scss, assets/homepage.scss]\n",
+    "    toc: true\n",
+    "    toc-location: left\n",
+    "    toc-title: \"Course Contents\"\n",
+    "    navbar:\n",
+    "      title: \"Deep RL Course\"\n",
+    "      left:\n",
+    "        - text: \"Home\"\n",
+    "          href: index.html\n",
+    "        - text: \"Lectures\"\n",
+    "          menu:\n",
+    "            - text: \"Introduction\"\n",
+    "              href: \"#introduction\"\n",
+    "            - text: \"Tabular RL\"\n",
+    "              href: \"#tabular-rl\"\n",
+    "            - text: \"Model-free RL\"\n",
+    "              href: \"#model-free-rl\"\n",
+    "            - text: \"Model-based RL\"\n",
+    "              href: \"#model-based-rl\"\n",
+    "        - text: \"Slides\"\n",
+    "          menu:\n",
+    "            - text: \"All Slides\"\n",
+    "              href: \"slides/\"\n",
+    "            - text: \"---\"\n",
+    "            - text: \"Introduction\"\n",
+    "              href: \"slides/0-Introduction.html\"\n",
+    "            - text: \"Bandits\"\n",
+    "              href: \"slides/1.1-Bandits.html\"\n",
+    "            - text: \"MDP\"\n",
+    "              href: \"slides/1.2-MDP.html\"\n",
+    "        - text: \"Resources\"\n",
+    "          menu:\n",
+    "            - text: \"GitHub Repository\"\n",
+    "              href: \"https://github.com/phatcvo/Lec-DRL\"\n",
+    "            - text: \"Bibliography\"\n",
+    "              href: \"#bibliography\"\n",
+    "      right:\n",
+    "        - icon: github\n",
+    "          href: \"https://github.com/phatcvo/Lec-DRL\"\n",
+    "          aria-label: GitHub\n",
+    "---\n",
+    "\n",
+    "\n",
+    "## Lectures\n",
+    "\n",
+    "#### 0 - Introduction {.lecture-section}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "95e4189d",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "from IPython.display import Markdown\n",
+    "\n",
+    "def table_lecture(lectures):\n",
+    "    # header\n",
+    "    text = \"\"\"\n",
+    "|          | Details |\n",
+    "|----------|--------|\"\"\"\n",
+    "\n",
+    "    # fields\n",
+    "    for key, desc in lectures.items():\n",
+    "        text += f\"\"\"\n",
+    "| {desc}  | [Slide](slides/{key}.html){{target=\"_blank\"}}, [Book](posts/{key}.html){{target=\"_blank\"}} |\"\"\"\n",
+    "\n",
+    "    # finish\n",
+    "    text += \"\"\"\n",
+    ": {tbl-colwidths=\"[80, 11]\"}\n",
+    "\"\"\"\n",
+    "\n",
+    "    return Markdown(text)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "77ea8cc6",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/markdown": [
+       "\n",
+       "|          | Details |\n",
+       "|----------|--------|\n",
+       "| **0 - Introduction**\\\n",
+       "Introduction to the main concepts of reinforcement learning and showcasing of the current applications.  | [Slide](slides/0-Introduction.html){target=\"_blank\"}, [Book](posts/0-Introduction.html){target=\"_blank\"} |\n",
+       ": {tbl-colwidths=\"[80, 11]\"}\n"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Markdown object>"
+      ]
+     },
+     "execution_count": 2,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lecs = {\n",
+    "    '0-Introduction': \"\"\"**0 - Introduction**\\\\\n",
+    "Introduction to the main concepts of reinforcement learning and showcasing of the current applications.\"\"\",\n",
+    "}\n",
+    "table_lecture(lecs)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c5fe1a43",
+   "metadata": {},
+   "source": [
+    "#### 1 - Tabular RL {.lecture-section}"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "f96a542a",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/markdown": [
+       "\n",
+       "|          | Details |\n",
+       "|----------|--------|\n",
+       "| **1.1 - Sampling and Bandits**\\\n",
+       "n-armed bandits, the simplest RL setting that can be solved by sampling.  | [Slide](slides/1.1-Bandits.html){target=\"_blank\"}, [Book](posts/1.1-Bandits.html){target=\"_blank\"} |\n",
+       "| **1.2 - Markov Decision Processes and Dynamic Programming**\\\n",
+       "MDPs are the basic RL framework. The value functions and the Bellman equations fully characterize a MDP. Dynamic programming is a model-based method allowing to iteratively solve the Bellman equations.  | [Slide](slides/1.2-MDP.html){target=\"_blank\"}, [Book](posts/1.2-MDP.html){target=\"_blank\"} |\n",
+       "| **1.3 - Monte Carlo control**\\\n",
+       "Monte Carlo control estimates value functions through sampling of complete episodes and infers the optimal policy using action selection, either on- or off-policy.  | [Slide](slides/1.3-MC.html){target=\"_blank\"}, [Book](posts/1.3-MC.html){target=\"_blank\"} |\n",
+       "| **1.4 - Temporal Difference**\\\n",
+       "TD algorithms allow the learning of value functions using single transitions. Q-learning is the famous off-policy variant.  | [Slide](slides/1.4-TD.html){target=\"_blank\"}, [Book](posts/1.4-TD.html){target=\"_blank\"} |\n",
+       "| **1.5 - Function Approximation**\\\n",
+       "Value functions can actually be approximated by any function approximator, allowing to apply RL to continuous state of action spaces.  | [Slide](slides/1.5-FunctionApproximation.html){target=\"_blank\"}, [Book](posts/1.5-FunctionApproximation.html){target=\"_blank\"} |\n",
+       "| **1.6 - Deep Neural Networks**\\\n",
+       "Quick overview of the main neural network architectures needed for the rest of the course.  | [Slide](slides/1.6-DeepNetworks.html){target=\"_blank\"}, [Book](posts/1.6-DeepNetworks.html){target=\"_blank\"} |\n",
+       ": {tbl-colwidths=\"[80, 11]\"}\n"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Markdown object>"
+      ]
+     },
+     "execution_count": 3,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lecs = {\n",
+    "    '1.1-Bandits': \"\"\"**1.1 - Sampling and Bandits**\\\\\n",
+    "n-armed bandits, the simplest RL setting that can be solved by sampling.\"\"\",\n",
+    "    '1.2-MDP': \"\"\"**1.2 - Markov Decision Processes and Dynamic Programming**\\\\\n",
+    "MDPs are the basic RL framework. The value functions and the Bellman equations fully characterize a MDP. Dynamic programming is a model-based method allowing to iteratively solve the Bellman equations.\"\"\",\n",
+    "    '1.3-MC': \"\"\"**1.3 - Monte Carlo control**\\\\\n",
+    "Monte Carlo control estimates value functions through sampling of complete episodes and infers the optimal policy using action selection, either on- or off-policy.\"\"\",\n",
+    "    '1.4-TD': \"\"\"**1.4 - Temporal Difference**\\\\\n",
+    "TD algorithms allow the learning of value functions using single transitions. Q-learning is the famous off-policy variant.\"\"\",\n",
+    "    '1.5-FunctionApproximation': \"\"\"**1.5 - Function Approximation**\\\\\n",
+    "Value functions can actually be approximated by any function approximator, allowing to apply RL to continuous state of action spaces.\"\"\",\n",
+    "    '1.6-DeepNetworks': \"\"\"**1.6 - Deep Neural Networks**\\\\\n",
+    "Quick overview of the main neural network architectures needed for the rest of the course.\"\"\",\n",
+    "}\n",
+    "table_lecture(lecs)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "c025f8ae",
+   "metadata": {},
+   "source": [
+    "#### 2 - Model-free RL {.lecture-section}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "eb9604e7",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/markdown": [
+       "\n",
+       "|          | Details |\n",
+       "|----------|--------|\n",
+       "| **2.1 - DQN: Deep Q-Network**\\\n",
+       "DQN (Mnih et al. 2013) was the first successful application of deep networks to the RL problem. It has been applied to Atari video games and started the interest for deep RL methods.  | [Slide](slides/2.1-DQN.html){target=\"_blank\"}, [Book](posts/2.1-DQN.html){target=\"_blank\"} |\n",
+       "| **2.2 - Beyond DQN**\\\n",
+       "Various extensions to the DQN algorithms have been proposed in the following years: distributional learning, parameter noise, distributed learning or recurrent architectures.  | [Slide](slides/2.2-DQNvariants.html){target=\"_blank\"}, [Book](posts/2.2-DQNvariants.html){target=\"_blank\"} |\n",
+       "| **2.3 - PG: Policy Gradient**\\\n",
+       "Policy gradient methods allow to directly learn the policy without requiring action selection over value functions.  | [Slide](slides/2.3-PolicyGradient.html){target=\"_blank\"}, [Book](posts/2.3-PolicyGradient.html){target=\"_blank\"} |\n",
+       "| **2.4 - AC: Actor-Critic**\\\n",
+       "A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gradient from multiple parallel workers.  | [Slide](slides/2.4-ActorCritic.html){target=\"_blank\"}, [Book](posts/2.4-ActorCritic.html){target=\"_blank\"} |\n",
+       "| **2.5 - DPG: Deterministic Policy Gradient**\\\n",
+       "DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics.  | [Slide](slides/2.5-DPG.html){target=\"_blank\"}, [Book](posts/2.5-DPG.html){target=\"_blank\"} |\n",
+       "| **2.6 - PPO: Proximal Policy Optimization**\\\n",
+       "PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates.  | [Slide](slides/2.6-PPO.html){target=\"_blank\"}, [Book](posts/2.6-PPO.html){target=\"_blank\"} |\n",
+       "| **2.7 - ACER: Actor-Critic with Experience Replay**\\\n",
+       "The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.  | [Slide](slides/2.7-ACER.html){target=\"_blank\"}, [Book](posts/2.7-ACER.html){target=\"_blank\"} |\n",
+       "| **2.8 - SAC: Soft Actor-Critic**\\\n",
+       "Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.  | [Slide](slides/2.8-EntropyRL.html){target=\"_blank\"}, [Book](posts/2.8-EntropyRL.html){target=\"_blank\"} |\n",
+       ": {tbl-colwidths=\"[80, 11]\"}\n"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Markdown object>"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lecs = {\n",
+    "    '2.1-DQN': \"\"\"**2.1 - DQN: Deep Q-Network**\\\\\n",
+    "DQN (Mnih et al. 2013) was the first successful application of deep networks to the RL problem. It has been applied to Atari video games and started the interest for deep RL methods.\"\"\",\n",
+    "    '2.2-DQNvariants': \"\"\"**2.2 - Beyond DQN**\\\\\n",
+    "Various extensions to the DQN algorithms have been proposed in the following years: distributional learning, parameter noise, distributed learning or recurrent architectures.\"\"\",\n",
+    "    '2.3-PolicyGradient': \"\"\"**2.3 - PG: Policy Gradient**\\\\\n",
+    "Policy gradient methods allow to directly learn the policy without requiring action selection over value functions.\"\"\",\n",
+    "    '2.4-ActorCritic': \"\"\"**2.4 - AC: Actor-Critic**\\\\\n",
+    "A3C (Mnih et al., 2016) is an actor-critic architecture estimating the policy gradient from multiple parallel workers.\"\"\",\n",
+    "    '2.5-DPG': \"\"\"**2.5 - DPG: Deterministic Policy Gradient**\\\\\n",
+    "DDPG (Lillicrap et al., is an off-policy actor-critic architecture particularly suited for continuous control problems such as robotics.\"\"\",\n",
+    "    '2.6-PPO': \"\"\"**2.6 - PPO: Proximal Policy Optimization**\\\\\n",
+    "PPO (Schulman et al., 2017) allows stable learning by estimating trust regions for the policy updates.\"\"\",\n",
+    "    '2.7-ACER': \"\"\"**2.7 - ACER: Actor-Critic with Experience Replay**\\\\\n",
+    "The natural gradient methods presented previously (TRPO, PPO) are stochastic actor-critic methods, therefore strictly on-policy.\"\"\",\n",
+    "    '2.8-EntropyRL': \"\"\"**2.8 - SAC: Soft Actor-Critic**\\\\\n",
+    "Maximum Entropy RL modifies the RL objective by learning optimal policies that also explore the environment as much as possible.. SAC (Haarnoja et al., 2018) is an off-policy actor-critic architecture for soft RL.\"\"\",\n",
+    "}\n",
+    "table_lecture(lecs)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bdfabd4e",
+   "metadata": {},
+   "source": [
+    "#### 3 - Model-based RL {.lecture-section}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "d9bacb1c",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/markdown": [
+       "\n",
+       "|          | Details |\n",
+       "|----------|--------|\n",
+       "| **3.1 - Model-based RL**\\\n",
+       "Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms.   | [Slide](slides/3.1-ModelBased.html){target=\"_blank\"}, [Book](posts/3.1-ModelBased.html){target=\"_blank\"} |\n",
+       "| **3.2 - Planning with learned World models**\\\n",
+       "Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.  | [Slide](slides/3.2-LearnedModels.html){target=\"_blank\"}, [Book](posts/3.2-LearnedModels.html){target=\"_blank\"} |\n",
+       "| **3.3 - Importance Sampling**\\\n",
+       "Importance sampling allows learning from off-policy data and is fundamental to many modern RL algorithms.  | [Slide](slides/3.3-ImportanceSampling.html){target=\"_blank\"}, [Book](posts/3.3-ImportanceSampling.html){target=\"_blank\"} |\n",
+       "| **3.3 - Planning (MPC, TDM)**\\   \n",
+       "Model-based learning is not only used to augment MF methods with imaginary rollouts.  | [Slide](slides/3.3-Planning.html){target=\"_blank\"}, [Book](posts/3.3-Planning.html){target=\"_blank\"} |\n",
+       "| **3.4 - World models, Dreamer**\\\n",
+       "The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.  | [Slide](slides/3.4-WorldModels.html){target=\"_blank\"}, [Book](posts/3.4-WorldModels.html){target=\"_blank\"} |\n",
+       "| **3.5 - AlphaGo**\\\n",
+       "AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search).  | [Slide](slides/3.5-AlphaGo.html){target=\"_blank\"}, [Book](posts/3.5-AlphaGo.html){target=\"_blank\"} |\n",
+       "| **3.5 - Natural Gradients**\\\n",
+       "Natural gradient methods provide more stable and efficient optimization for policy gradient algorithms.  | [Slide](slides/3.5-NaturalGradient.html){target=\"_blank\"}, [Book](posts/3.5-NaturalGradient.html){target=\"_blank\"} |\n",
+       ": {tbl-colwidths=\"[80, 11]\"}\n"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Markdown object>"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lecs = {\n",
+    "    '3.1-ModelBased': \"\"\"**3.1 - Model-based RL**\\\\\n",
+    "Model-based RL uses a world model to emulate the future. Dyna-like architectures use  these rollouts to augment MF algorithms. \"\"\",\n",
+    "    '3.2-LearnedModels': \"\"\"**3.2 - Planning with learned World models**\\\\\n",
+    "Learning a world model from data and planning the optimal sequence of actions using model-predictive control is much easier than learning the optimal policy directly. Modern model-based algorithms (World models, PlaNet, Dreamer) make use of this property to reduce the sample complexity.\"\"\",\n",
+    "    '3.3-ImportanceSampling': \"\"\"**3.3 - Importance Sampling**\\\\\n",
+    "Importance sampling allows learning from off-policy data and is fundamental to many modern RL algorithms.\"\"\",\n",
+    "    '3.3-Planning': \"\"\"**3.3 - Planning (MPC, TDM)**\\\\   \n",
+    "Model-based learning is not only used to augment MF methods with imaginary rollouts.\"\"\",\n",
+    "    '3.4-WorldModels': \"\"\"**3.4 - World models, Dreamer**\\\\\n",
+    "The neural networks used in deep RL are usually small, as rewards do not contain enough information to train huge networks.\"\"\",\n",
+    "    '3.5-AlphaGo': \"\"\"**3.5 - AlphaGo**\\\\\n",
+    "AlphaGo surprised the world in 2016 by beating Lee Seedol, the world champion of Go. It combines model-free learning through policy gradient and self-play with model-based planning using MCTS (Monte Carlo Tree Search).\"\"\",\n",
+    "    '3.5-NaturalGradient': \"\"\"**3.5 - Natural Gradients**\\\\\n",
+    "Natural gradient methods provide more stable and efficient optimization for policy gradient algorithms.\"\"\",\n",
+    "}\n",
+    "table_lecture(lecs)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "d44d402c",
+   "metadata": {},
+   "source": [
+    "#### 4 - Outlook {.lecture-section}\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "d6c3f462",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/markdown": [
+       "\n",
+       "|          | Details |\n",
+       "|----------|--------|\n",
+       "| **5.1 - Outlook**\\\n",
+       "Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc.  | [Slide](slides/4.1-Outlook.html){target=\"_blank\"}, [Book](posts/4.1-Outlook.html){target=\"_blank\"} |\n",
+       ": {tbl-colwidths=\"[80, 11]\"}\n"
+      ],
+      "text/plain": [
+       "<IPython.core.display.Markdown object>"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "lecs = {\n",
+    "    '4.1-Outlook': \"\"\"**5.1 - Outlook**\\\\\n",
+    "Current RL research investigates many different directions: inverse RL, intrinsic motivation, hierarchical RL, meta RL, offline RL, multi-agent RL (MARL), etc.\"\"\",\n",
+    "}\n",
+    "table_lecture(lecs)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "10377e66",
+   "metadata": {},
+   "source": [
+    "## Recommended readings\n",
+    "\n",
+    "* Richard Sutton and Andrew Barto (2017). Reinforcement Learning: An Introduction. MIT press. \n",
+    "\n",
+    "<http://incompleteideas.net/book/the-book-2nd.html>\n",
+    "\n",
+    "* CS294 course of Sergey Levine at Berkeley. \n",
+    "\n",
+    "<http://rll.berkeley.edu/deeprlcourse/>\n",
+    "\n",
+    "* Reinforcement Learning course by David Silver at UCL.\n",
+    "\n",
+    "<http://www0.cs.ucl.ac.uk/staff/d.silver/web/Teaching.html>\n",
+    "\n",
+    "::: {.course-footer}\n",
+    "© 2025 Deep Reinforcement Learning Course. This course material is designed to provide comprehensive coverage of modern reinforcement learning techniques.\n",
+    ":::"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3",
+   "path": "/home/stpc/.local/share/jupyter/kernels/python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.10"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
