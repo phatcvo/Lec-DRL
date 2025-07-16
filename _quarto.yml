@@ -8,7 +8,7 @@ website:
     title: "Deep RL Course"
     left:
       - text: "Home"
-        href: index.html
+        href: "https://phatcvo.github.io/blog/"
       - text: "Lectures"
         menu:
           - text: "Introduction"
