@@ -5,105 +5,89 @@ project:
 website:
   title: "Deep Reinforcement Learning"
   navbar:
-    title: "Deep RL Course"
     left:
-      - text: "Home"
-        href: "https://phatcvo.github.io/"
-      - text: "Lectures"
+      - text: Main Site
+        href: https://phatcvo.github.io/
+      - text: Courses
         menu:
-          - text: "Introduction"
+          - text: Deep RL
+            href: https://phatcvo.github.io/Lec-DRL/
+          - text: MPC
+            href: https://phatcvo.github.io/Lec-MPC/
+          - text: Safe-Optimal
+            href: https://phatcvo.github.io/Safe-Optimal-Control/
+      - text: Course
+        menu:
+          - text: Lectures Anchor
             href: "#introduction"
-          - text: "Tabular RL"
-            href: "#tabular-rl"
-          - text: "Model-free RL"
-            href: "#model-free-rl"
-          - text: "Model-based RL"
-            href: "#model-based-rl"
-      - text: "Slides"
+          - text: Slides Index
+            href: slides/
+          - text: Book Intro
+            href: posts/0-Introduction.html
+          - text: "---"
+          - text: Book Sections
+          - text: Bandits
+            href: posts/1.1-Bandits.html
+          - text: MDP
+            href: posts/1.2-MDP.html
+          - text: Monte Carlo
+            href: posts/1.3-MC.html
+          - text: Temporal Difference
+            href: posts/1.4-TD.html
+          - text: Function Approximation
+            href: posts/1.5-FunctionApproximation.html
+          - text: Deep Networks
+            href: posts/1.6-DeepNetworks.html
+          - text: DQN
+            href: posts/2.1-DQN.html
+          - text: DQN Variants
+            href: posts/2.2-DQNvariants.html
+          - text: Policy Gradient
+            href: posts/2.3-PolicyGradient.html
+          - text: Actor-Critic
+            href: posts/2.4-ActorCritic.html
+          - text: DPG
+            href: posts/2.5-DPG.html
+          - text: PPO
+            href: posts/2.6-PPO.html
+          - text: ACER
+            href: posts/2.7-ACER.html
+          - text: SAC
+            href: posts/2.8-EntropyRL.html
+          - text: Model-based
+            href: posts/3.1-ModelBased.html
+          - text: Learned Models
+            href: posts/3.2-LearnedModels.html
+          - text: Importance Sampling
+            href: posts/3.3-ImportanceSampling.html
+          - text: Planning
+            href: posts/3.3-Planning.html
+          - text: World Models
+            href: posts/3.4-WorldModels.html
+          - text: AlphaGo
+            href: posts/3.5-AlphaGo.html
+          - text: Natural Gradients
+            href: posts/3.5-NaturalGradient.html
+          - text: Outlook
+            href: posts/4.1-Outlook.html
+      - text: Resources
         menu:
-          - text: "All Slides"
-            href: "slides/"
-          - text: "---"
-          - text: "Introduction"
-            href: "slides/0-Introduction.html"
-          - text: "Bandits"
-            href: "slides/1.1-Bandits.html"
-          - text: "MDP"
-            href: "slides/1.2-MDP.html"
-      - text: "Book"
-        menu:
-          - text: "Introduction"
-            href: "posts/0-Introduction.html"
-          - text: "---"
-          - text: "Tabular RL"
-          - text: "Bandits"
-            href: "posts/1.1-Bandits.html"
-          - text: "MDP"
-            href: "posts/1.2-MDP.html"
-          - text: "Monte Carlo"
-            href: "posts/1.3-MC.html"
-          - text: "Temporal Difference"
-            href: "posts/1.4-TD.html"
-          - text: "Function Approximation"
-            href: "posts/1.5-FunctionApproximation.html"
-          - text: "Deep Networks"
-            href: "posts/1.6-DeepNetworks.html"
-          - text: "---"
-          - text: "Model-free RL"
-          - text: "DQN"
-            href: "posts/2.1-DQN.html"
-          - text: "DQN Variants"
-            href: "posts/2.2-DQNvariants.html"
-          - text: "Policy Gradient"
-            href: "posts/2.3-PolicyGradient.html"
-          - text: "Actor-Critic"
-            href: "posts/2.4-ActorCritic.html"
-          - text: "DPG"
-            href: "posts/2.5-DPG.html"
-          - text: "PPO"
-            href: "posts/2.6-PPO.html"
-          - text: "ACER"
-            href: "posts/2.7-ACER.html"
-          - text: "SAC"
-            href: "posts/2.8-EntropyRL.html"
-          - text: "---"
-          - text: "Model-based RL"
-          - text: "Model-based"
-            href: "posts/3.1-ModelBased.html"
-          - text: "Learned Models"
-            href: "posts/3.2-LearnedModels.html"
-          - text: "Importance Sampling"
-            href: "posts/3.3-ImportanceSampling.html"
-          - text: "Planning"
-            href: "posts/3.3-Planning.html"
-          - text: "World Models"
-            href: "posts/3.4-WorldModels.html"
-          - text: "AlphaGo"
-            href: "posts/3.5-AlphaGo.html"
-          - text: "Natural Gradients"
-            href: "posts/3.5-NaturalGradient.html"
-          - text: "---"
-          - text: "Outlook"
-            href: "posts/4.1-Outlook.html"
-      - text: "Resources"
-        menu:
-          - text: "GitHub Repository"
-            href: "https://github.com/phatcvo/Lec-DRL"
-          - text: "Bibliography"
+          - text: GitHub Repo
+            href: https://github.com/phatcvo/Lec-DRL
+          - text: Bibliography
             href: "#recommended-readings"
     right:
-      - text: "Main Site"
-        href: "https://phatcvo.github.io/"
       - icon: github
-        href: "https://github.com/phatcvo/Lec-DRL"
+        href: https://github.com/phatcvo/Lec-DRL
         aria-label: GitHub
 
 format:
   html:
     theme:
-      - cosmo
-      - assets/theme-sync.scss
-    css: [assets/custom.scss, assets/homepage.scss]
+      light: cosmo
+      dark: cosmo
+      # note: theme-sync.scss included via theme list not supported with light/dark map, keep as css import instead
+    css: [assets/theme-sync.scss, assets/custom.scss, assets/homepage.scss]
     toc: true
     toc-location: left
     smooth-scroll: true
