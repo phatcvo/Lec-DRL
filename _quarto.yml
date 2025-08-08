@@ -8,7 +8,7 @@ website:
     title: "Deep RL Course"
     left:
       - text: "Home"
-        href: "https://phatcvo.github.io/blog/"
+        href: "https://phatcvo.github.io/"
       - text: "Lectures"
         menu:
           - text: "Introduction"
@@ -92,13 +92,17 @@ website:
           - text: "Bibliography"
             href: "#recommended-readings"
     right:
+      - text: "Main Site"
+        href: "https://phatcvo.github.io/"
       - icon: github
         href: "https://github.com/phatcvo/Lec-DRL"
         aria-label: GitHub
 
 format:
   html:
-    theme: cosmo
+    theme:
+      - cosmo
+      - assets/theme-sync.scss
     css: [assets/custom.scss, assets/homepage.scss]
     toc: true
     toc-location: left
