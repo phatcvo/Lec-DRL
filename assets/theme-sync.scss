@@ -1,25 +1,6 @@
-/* Shared theme sync overrides to align with main site styling */
-
-:root {
-  /* Primary brand color (adjust if you have a specific brand color) */
-  --brand-primary: #2b6cb0; /* blue tone */
-  --brand-accent: #e07a15; /* accent orange */
-}
-
-.navbar, .navbar-dark, .navbar-brand {
-  font-weight: 600;
-}
-
-.navbar a.nav-link:hover { 
-  text-decoration: underline; 
-}
-
-/* Consistent code block tweaks */
-pre code {
-  font-size: 0.9rem;
-}
-
-/* Heading spacing consistency */
-main h1, main h2, main h3 {
-  scroll-margin-top: 5rem;
-}
+@import "theme-core";
+/*-- scss:rules --*/
+.navbar, .navbar-dark, .navbar-brand { font-weight: 600; }
+.navbar a.nav-link:hover { text-decoration: underline; }
+pre code { font-size: 0.9rem; }
+main h1, main h2, main h3 { scroll-margin-top: 5rem; }
