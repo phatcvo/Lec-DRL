@@ -5,6 +5,7 @@ project:
 website:
   title: "Deep Reinforcement Learning"
   navbar:
+    title: "Deep RL Course"
     left:
       - text: Main Site
         href: https://phatcvo.github.io/
@@ -16,16 +17,17 @@ website:
             href: https://phatcvo.github.io/Lec-MPC/
           - text: Safe-Optimal
             href: https://phatcvo.github.io/Safe-Optimal-Control/
-      - text: Course
+      - text: Content
         menu:
-          - text: Lectures Anchor
+          - text: "Lectures (Top)"
             href: "#introduction"
-          - text: Slides Index
+          - text: Slides
             href: slides/
+          - text: "---"
           - text: Book Intro
             href: posts/0-Introduction.html
           - text: "---"
-          - text: Book Sections
+          - text: Tabular RL
           - text: Bandits
             href: posts/1.1-Bandits.html
           - text: MDP
@@ -38,6 +40,8 @@ website:
             href: posts/1.5-FunctionApproximation.html
           - text: Deep Networks
             href: posts/1.6-DeepNetworks.html
+          - text: "---"
+          - text: Model-free RL
           - text: DQN
             href: posts/2.1-DQN.html
           - text: DQN Variants
@@ -54,6 +58,8 @@ website:
             href: posts/2.7-ACER.html
           - text: SAC
             href: posts/2.8-EntropyRL.html
+          - text: "---"
+          - text: Model-based RL
           - text: Model-based
             href: posts/3.1-ModelBased.html
           - text: Learned Models
