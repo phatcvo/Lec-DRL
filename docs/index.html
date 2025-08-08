@@ -75,7 +75,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-8121be8726ca0479b8e185c28c81c4d1.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-c1fac2584b48ed01fb6e278e36375074.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -106,6 +106,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <style>html{ scroll-behavior: smooth; }</style>
 
 
+<link rel="stylesheet" href="assets/theme-sync.scss">
 <link rel="stylesheet" href="assets/custom.scss">
 <link rel="stylesheet" href="assets/homepage.scss">
 </head>
@@ -128,64 +129,45 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll me-auto">
   <li class="nav-item">
-    <a class="nav-link" href="https://phatcvo.github.io/blog/"> 
-<span class="menu-text">Home</span></a>
+    <a class="nav-link" href="https://phatcvo.github.io/"> 
+<span class="menu-text">Main Site</span></a>
   </li>  
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-lectures" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Lectures</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-courses" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Courses</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-lectures">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-courses">    
         <li>
-    <a class="dropdown-item" href="./#introduction">
- <span class="dropdown-text">Introduction</span></a>
+    <a class="dropdown-item" href="https://phatcvo.github.io/Lec-DRL/">
+ <span class="dropdown-text">Deep RL</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./#tabular-rl">
- <span class="dropdown-text">Tabular RL</span></a>
+    <a class="dropdown-item" href="https://phatcvo.github.io/Lec-MPC/">
+ <span class="dropdown-text">MPC</span></a>
   </li>  
         <li>
-    <a class="dropdown-item" href="./#model-free-rl">
- <span class="dropdown-text">Model-free RL</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="./#model-based-rl">
- <span class="dropdown-text">Model-based RL</span></a>
+    <a class="dropdown-item" href="https://phatcvo.github.io/Safe-Optimal-Control/">
+ <span class="dropdown-text">Safe-Optimal</span></a>
   </li>  
     </ul>
   </li>
   <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-slides" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Slides</span>
+    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-content" role="link" data-bs-toggle="dropdown" aria-expanded="false">
+ <span class="menu-text">Content</span>
     </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-slides">    
+    <ul class="dropdown-menu" aria-labelledby="nav-menu-content">    
+        <li>
+    <a class="dropdown-item" href="./#introduction">
+ <span class="dropdown-text">Lectures (Top)</span></a>
+  </li>  
         <li>
     <a class="dropdown-item" href="./slides/">
- <span class="dropdown-text">All Slides</span></a>
+ <span class="dropdown-text">Slides</span></a>
   </li>  
         <li><hr class="dropdown-divider"></li>
         <li>
-    <a class="dropdown-item" href="./slides/0-Introduction.html">
- <span class="dropdown-text">Introduction</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="./slides/1.1-Bandits.html">
- <span class="dropdown-text">Bandits</span></a>
-  </li>  
-        <li>
-    <a class="dropdown-item" href="./slides/1.2-MDP.html">
- <span class="dropdown-text">MDP</span></a>
-  </li>  
-    </ul>
-  </li>
-  <li class="nav-item dropdown ">
-    <a class="nav-link dropdown-toggle" href="#" id="nav-menu-book" role="link" data-bs-toggle="dropdown" aria-expanded="false">
- <span class="menu-text">Book</span>
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="nav-menu-book">    
-        <li>
     <a class="dropdown-item" href="./posts/0-Introduction.html">
- <span class="dropdown-text">Introduction</span></a>
+ <span class="dropdown-text">Book Intro</span></a>
   </li>  
         <li><hr class="dropdown-divider"></li>
         <li class="dropdown-header">Tabular RL</li>
@@ -277,7 +259,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <a class="dropdown-item" href="./posts/3.5-NaturalGradient.html">
  <span class="dropdown-text">Natural Gradients</span></a>
   </li>  
-        <li><hr class="dropdown-divider"></li>
         <li>
     <a class="dropdown-item" href="./posts/4.1-Outlook.html">
  <span class="dropdown-text">Outlook</span></a>
@@ -291,7 +272,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <ul class="dropdown-menu" aria-labelledby="nav-menu-resources">    
         <li>
     <a class="dropdown-item" href="https://github.com/phatcvo/Lec-DRL">
- <span class="dropdown-text">GitHub Repository</span></a>
+ <span class="dropdown-text">GitHub Repo</span></a>
   </li>  
         <li>
     <a class="dropdown-item" href="./#recommended-readings">
@@ -309,6 +290,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ul>
           </div> <!-- /navcollapse -->
             <div class="quarto-navbar-tools">
+  <a href="" class="quarto-color-scheme-toggle quarto-navigation-tool  px-1" onclick="window.quartoToggleColorScheme(); return false;" title="Toggle dark mode"><i class="bi"></i></a>
 </div>
       </div> <!-- /container-fluid -->
     </nav>
@@ -357,7 +339,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <h2 class="anchored" data-anchor-id="lectures">Lectures</h2>
 <section id="introduction" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="introduction">0 - Introduction</h4>
-<div id="985f6a15" class="cell" data-execution_count="2">
+<div id="15271f58" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="2">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -383,7 +365,7 @@ Introduction to the main concepts of reinforcement learning and showcasing of th
 </section>
 <section id="tabular-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="tabular-rl">1 - Tabular RL</h4>
-<div id="495f2b1a" class="cell" data-execution_count="3">
+<div id="0c865f9a" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="3">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -434,7 +416,7 @@ Quick overview of the main neural network architectures needed for the rest of t
 </section>
 <section id="model-free-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="model-free-rl">2 - Model-free RL</h4>
-<div id="053fe9f9" class="cell" data-execution_count="4">
+<div id="e21b48d1" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="4">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -495,7 +477,7 @@ Maximum Entropy RL modifies the RL objective by learning optimal policies that a
 </section>
 <section id="model-based-rl" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="model-based-rl">3 - Model-based RL</h4>
-<div id="418c94e9" class="cell" data-execution_count="5">
+<div id="aede3692" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="5">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -554,7 +536,7 @@ Natural gradient methods provide more stable and efficient optimization for poli
 </section>
 <section id="outlook" class="level4 lecture-section">
 <h4 class="lecture-section anchored" data-anchor-id="outlook">4 - Outlook</h4>
-<div id="3808937d" class="cell" data-execution_count="6">
+<div id="4fe65b88" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display cell-output-markdown" data-execution_count="6">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>

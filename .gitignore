@@ -1,8 +1,12 @@
 .vscode
 /.quarto/
 
-# Build outputs - docs/ directory for GitHub Pages, allow root HTML files
-docs/
+# Build outputs - keep docs/ (GitHub Pages source) tracked
+!.nojekyll
+!docs/
+
+# Python virtual environment
+.venv/
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
