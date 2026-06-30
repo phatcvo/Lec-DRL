@@ -1,6 +1,11 @@
 project:
   type: website
   output-dir: docs
+  # Lecture posts moved to https://phatcvo.github.io/blog/drl/ (docs/posts/* are now
+  # redirect stubs). Render only the homepage and slides so re-renders don't clobber them.
+  render:
+    - index.qmd
+    - slides/*.qmd
 
 website:
   title: "Deep Reinforcement Learning"

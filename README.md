@@ -1,3 +1,6 @@
+> **The lecture notes have moved** to <https://phatcvo.github.io/blog/drl/>.
+> This repo now hosts the slide decks only; the old post URLs redirect to the new site.
+
 ## <b>[Deep Reinforcement learning](https://phatcvo.github.io/Lec-DRL/)</b>
 
 The goal of this document is to keep track the state-of-the-art in deep reinforcement learning. It starts with basics in reinforcement learning and deep learning to introduce the notations and covers different classes of deep RL methods, value-based or policy-based, model-free or model-based, etc.
